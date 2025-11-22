@@ -81,7 +81,6 @@ html, body {
 
 /* Stop Guidance Button */
 #stop-guidance {
-  display: none;
   width: 100%;
   margin-top: 10px;
   padding: 12px;

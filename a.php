@@ -16,7 +16,7 @@
   <label for="site-search">Search the parking:</label>
 <input type="search" id="site-search" name="q" />
 <button>Search</button>
-<button id="stop-guidance">Stopper le guidage</button>
+<button id="stop-guidance" style="display: none;">Stopper le guidage</button>
 </div>
   <div id="map"></div>
 
