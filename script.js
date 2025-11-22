@@ -28,6 +28,8 @@ let marqueursParkings = [];
 let estEnGuidage = false;
 let donneesParkings = null;
 let coucheItineraireSecondaire = null;
+let destinationFinale = null;
+let parkingIntermediaire = null;
 
 // Géolocalisation
 function mettreAJourPositionUtilisateur() {
@@ -39,6 +41,19 @@ function mettreAJourPositionUtilisateur() {
     } else {
       marqueurUtilisateur = L.marker(positionUtilisateur, { icon: iconeUtilisateur }).addTo(carte);
       carte.setView(positionUtilisateur, 15);
+    }
+    
+    // Recalculer l'itinéraire si en guidage
+    if (estEnGuidage && marqueurDestination) {
+      if (destinationFinale && parkingIntermediaire) {
+        // Guidage avec parking intermédiaire
+        calculerItineraire(positionUtilisateur, [parkingIntermediaire.lat, parkingIntermediaire.lng]);
+        calculerItineraireSecondaire([parkingIntermediaire.lat, parkingIntermediaire.lng], [destinationFinale.lat, destinationFinale.lng]);
+      } else {
+        // Guidage direct vers un parking
+        const destLatLng = marqueurDestination.getLatLng();
+        calculerItineraire(positionUtilisateur, [destLatLng.lat, destLatLng.lng]);
+      }
     }
   });
 }
@@ -68,15 +83,25 @@ async function calculerItineraire(debut, fin) {
 // Récupérer et afficher les parkings
 async function chargerParkings() {
   try {
-    const reponse = await fetch('https://maps.eurometropolemetz.eu/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:pub_tsp_sta&srsName=EPSG:4326&outputFormat=application%2Fjson&cql_filter=id%20is%20not%20null');
-    const donnees = await reponse.json();
+    // Charger les parkings avec disponibilité en temps réel
+    const reponse1 = await fetch('https://maps.eurometropolemetz.eu/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:pub_tsp_sta&srsName=EPSG:4326&outputFormat=application%2Fjson&cql_filter=id%20is%20not%20null');
+    const donnees1 = await reponse1.json();
     
-    donneesParkings = donnees;
+    // Charger les places PMR
+    const reponse2 = await fetch('https://maps.eurometropolemetz.eu/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=public:pub_acc_sta&srsName=EPSG:4326&outputFormat=json');
+    const donnees2 = await reponse2.json();
+    
+    // Combiner les deux sources de données
+    donneesParkings = {
+      type: "FeatureCollection",
+      features: [...donnees1.features, ...donnees2.features]
+    };
     
     marqueursParkings.forEach(marqueur => carte.removeLayer(marqueur));
     marqueursParkings = [];
     
-    donnees.features.forEach(feature => {
+    // Afficher les parkings avec disponibilité
+    donnees1.features.forEach(feature => {
       const coords = feature.geometry.coordinates;
       const nom = feature.properties.lib || 'Parking';
       const disponibles = feature.properties.place_libre || 0;
@@ -103,6 +128,38 @@ async function chargerParkings() {
       
       marqueursParkings.push(marqueur);
     });
+    
+    // Afficher les places de stationnement supplémentaires
+    donnees2.features.forEach(feature => {
+      const coords = feature.geometry.coordinates;
+      const voie = feature.properties.voie || 'Parking';
+      const quartier = feature.properties.quartier || '';
+      const nombre = feature.properties.nombre || 1;
+      const config = feature.properties.config || '';
+      
+      const iconeParking2 = L.divIcon({
+        html: `<div style="background: #808080; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
+        className: '',
+        iconSize: [10, 10],
+        iconAnchor: [5, 5]
+      });
+      
+      const contenuPopup = `
+        <div>
+          <b>${voie}</b><br>
+          ${quartier ? `Quartier: ${quartier}<br>` : ''}
+          ${nombre > 1 ? `${nombre} places<br>` : ''}
+          ${config ? `Config: ${config}<br>` : ''}
+          <button onclick="demarrerGuidage(${coords[1]}, ${coords[0]})" style="margin-top: 10px; padding: 8px 16px; background: #808080; color: white; border: none; border-radius: 5px; cursor: pointer;">M'y guider</button>
+        </div>
+      `;
+      
+      const marqueur = L.marker([coords[1], coords[0]], { icon: iconeParking2 })
+        .bindPopup(contenuPopup)
+        .addTo(carte);
+      
+      marqueursParkings.push(marqueur);
+    });
   } catch (erreur) {
     console.error('Erreur lors du chargement des parkings:', erreur);
   }
@@ -117,11 +174,16 @@ window.demarrerGuidage = function(lat, lng) {
   
   estEnGuidage = true;
   
+  // Réinitialiser les variables de destination
+  destinationFinale = null;
+  parkingIntermediaire = null;
+  
   // Cacher tous les parkings
   marqueursParkings.forEach(marqueur => carte.removeLayer(marqueur));
   
   // Supprimer le marqueur de destination précédent
   if (marqueurDestination) carte.removeLayer(marqueurDestination);
+  if (coucheItineraire) carte.removeLayer(coucheItineraire);
   if (coucheItineraireSecondaire) carte.removeLayer(coucheItineraireSecondaire);
   
   // Ajouter le marqueur de destination
@@ -130,8 +192,10 @@ window.demarrerGuidage = function(lat, lng) {
   // Calculer l'itinéraire
   calculerItineraire(positionUtilisateur, [lat, lng]);
   
-  // Afficher le bouton stopper
+  // Afficher le bouton stopper et cacher le bouton nearest-parking
   document.getElementById('stop-guidance').classList.remove('hidden');
+  document.getElementById('nearest-parking').classList.add('hidden');
+  document.getElementById('search-bar').style.display = 'none';
   
   // Fermer le popup
   carte.closePopup();
@@ -140,6 +204,8 @@ window.demarrerGuidage = function(lat, lng) {
 // Stopper le guidage
 document.getElementById('stop-guidance').addEventListener('click', function() {
   estEnGuidage = false;
+  destinationFinale = null;
+  parkingIntermediaire = null;
   
   // Supprimer l'itinéraire
   if (coucheItineraire) carte.removeLayer(coucheItineraire);
@@ -151,8 +217,28 @@ document.getElementById('stop-guidance').addEventListener('click', function() {
   // Réafficher les parkings
   chargerParkings();
   
-  // Cacher le bouton stopper
+  // Cacher le bouton stopper et réafficher le bouton nearest-parking
   this.classList.add('hidden');
+  document.getElementById('nearest-parking').classList.remove('hidden');
+  document.getElementById('search-bar').style.display = '';
+});
+
+// Bouton parking le plus proche
+document.getElementById('nearest-parking').addEventListener('click', function() {
+  if (!positionUtilisateur) {
+    alert('Position utilisateur non disponible');
+    return;
+  }
+  
+  const parkingLePlusProche = trouverParkingLePlusProche(positionUtilisateur[0], positionUtilisateur[1]);
+  
+  if (!parkingLePlusProche) {
+    alert('Aucun parking trouvé');
+    return;
+  }
+  
+  // Démarrer le guidage vers le parking le plus proche
+  demarrerGuidage(parkingLePlusProche.lat, parkingLePlusProche.lng);
 });
 
 // Trouver le parking le plus proche
@@ -197,6 +283,119 @@ async function calculerItineraireSecondaire(debut, fin) {
   }).addTo(carte);
 }
 
+// Recherche de parkings
+const inputRecherche = document.getElementById('site-search');
+const suggestionsList = document.getElementById('suggestions');
+const searchButton = document.getElementById('search-button');
+// Fonction pour filtrer les parkings
+function filtrerParkings(recherche) {
+  if (!donneesParkings || !recherche) return [];
+  
+  const rechercheMin = recherche.toLowerCase();
+  return donneesParkings.features.filter(feature => {
+    const nom = feature.properties.lib || '';
+    return nom.toLowerCase().includes(rechercheMin);
+  });
+}
+
+// Afficher les suggestions
+function afficherSuggestions(parkings) {
+  suggestionsList.innerHTML = '';
+  
+  if (parkings.length === 0) {
+    suggestionsList.classList.add('hidden');
+    return;
+  }
+  
+  parkings.forEach(feature => {
+    const coords = feature.geometry.coordinates;
+    const nom = feature.properties.lib || 'Parking';
+    const disponibles = feature.properties.place_libre || 0;
+    const total = feature.properties.place_total || 0;
+    
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+    item.innerHTML = `
+      <strong>${nom}</strong>
+      <div class="parking-info">Disponibles: ${disponibles}/${total}</div>
+    `;
+    
+    item.addEventListener('click', () => {
+      inputRecherche.value = nom;
+      suggestionsList.classList.add('hidden');
+      // Centrer sur le parking et ouvrir le popup
+      carte.setView([coords[1], coords[0]], 17);
+      // Trouver le marqueur correspondant et ouvrir son popup
+      marqueursParkings.forEach(marqueur => {
+        if (marqueur.getLatLng().lat === coords[1] && marqueur.getLatLng().lng === coords[0]) {
+          marqueur.openPopup();
+        }
+      });
+    });
+    
+    suggestionsList.appendChild(item);
+  });
+  
+  suggestionsList.classList.remove('hidden');
+}
+
+// Écouter les changements dans l'input
+inputRecherche.addEventListener('input', (e) => {
+  const recherche = e.target.value.trim();
+  
+  if (recherche.length < 2) {
+    suggestionsList.classList.add('hidden');
+    return;
+  }
+  
+  const parkingsFiltres = filtrerParkings(recherche);
+  afficherSuggestions(parkingsFiltres);
+});
+
+// Cacher les suggestions lors du clic ailleurs
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#search-bar')) {
+    suggestionsList.classList.add('hidden');
+  }
+});
+
+// Bouton de recherche
+searchButton.addEventListener('click', () => {
+  const recherche = inputRecherche.value.trim();
+  
+  if (recherche.length < 2) {
+    alert('Veuillez entrer au moins 2 caractères');
+    return;
+  }
+  
+  const parkingsFiltres = filtrerParkings(recherche);
+  
+  if (parkingsFiltres.length === 0) {
+    alert('Aucun parking trouvé');
+    return;
+  }
+  
+  // Centrer sur le premier résultat
+  const coords = parkingsFiltres[0].geometry.coordinates;
+  carte.setView([coords[1], coords[0]], 17);
+  
+  // Ouvrir le popup du premier résultat
+  marqueursParkings.forEach(marqueur => {
+    if (marqueur.getLatLng().lat === coords[1] && marqueur.getLatLng().lng === coords[0]) {
+      marqueur.openPopup();
+    }
+  });
+  
+  suggestionsList.classList.add('hidden');
+});
+
+// Permettre la recherche avec la touche Entrée
+inputRecherche.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    searchButton.click();
+  }
+});
+
 // Clic sur la carte
 carte.on('click', async function(e) {
   if (estEnGuidage) return;
@@ -212,13 +411,17 @@ carte.on('click', async function(e) {
   
   estEnGuidage = true;
   
-  // Cacher tous les parkings
-  marqueursParkings.forEach(marqueur => carte.removeLayer(marqueur));
-  
-  // Supprimer les marqueurs et routes précédents
+  // Supprimer les anciennes routes et marqueurs
   if (marqueurDestination) carte.removeLayer(marqueurDestination);
   if (coucheItineraire) carte.removeLayer(coucheItineraire);
   if (coucheItineraireSecondaire) carte.removeLayer(coucheItineraireSecondaire);
+  
+  // Stocker la destination finale et le parking intermédiaire
+  destinationFinale = { lat: latClic, lng: lngClic };
+  parkingIntermediaire = parkingLePlusProche;
+  
+  // Cacher tous les parkings
+  marqueursParkings.forEach(marqueur => carte.removeLayer(marqueur));
   
   // Ajouter le marqueur de destination finale
   marqueurDestination = L.marker([latClic, lngClic], { icon: iconeDestination }).addTo(carte);
@@ -229,6 +432,8 @@ carte.on('click', async function(e) {
   // Calculer le trajet du parking à la destination
   await calculerItineraireSecondaire([parkingLePlusProche.lat, parkingLePlusProche.lng], [latClic, lngClic]);
   
-  // Afficher le bouton stopper
+  // Afficher le bouton stopper et cacher le bouton nearest-parking
   document.getElementById('stop-guidance').classList.remove('hidden');
+  document.getElementById('nearest-parking').classList.add('hidden');
+  document.getElementById('search-bar').style.display = 'none';
 });
