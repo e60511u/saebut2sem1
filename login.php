@@ -17,23 +17,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($identifier) && !empty($password)) {
         $pdo = connectDB();
         
-        // Rechercher par email ou pseudo
-        $stmt = $pdo->prepare("SELECT * FROM Utilisateur WHERE email = ? OR pseudo = ?");
-        $stmt->execute([$identifier, $identifier]);
-        $user = $stmt->fetch();
-        
-        if ($user && password_verify($password, $user['mot_de_passe'])) {
-            // Connexion réussie
-            $_SESSION['user_id'] = $user['id_utilisateur'];
-            $_SESSION['pseudo'] = $user['pseudo'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['preference_cout'] = $user['preference_cout'];
-            $_SESSION['est_pmr'] = $user['est_pmr'];
-            
-            header('Location: app.php');
-            exit;
+        if ($pdo === null) {
+            $error = 'Erreur de connexion à la base de données';
         } else {
-            $error = 'Identifiant ou mot de passe incorrect';
+            // Rechercher par email ou pseudo
+            $stmt = $pdo->prepare("SELECT * FROM Utilisateur WHERE email = ? OR pseudo = ?");
+            $stmt->execute([$identifier, $identifier]);
+            $user = $stmt->fetch();
+            
+            if ($user && password_verify($password, $user['mot_de_passe'])) {
+                // Connexion réussie
+                $_SESSION['user_id'] = $user['id_utilisateur'];
+                $_SESSION['pseudo'] = $user['pseudo'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['preference_cout'] = $user['preference_cout'];
+                $_SESSION['est_pmr'] = $user['est_pmr'];
+                
+                header('Location: app.php');
+                exit;
+            } else {
+                $error = 'Identifiant ou mot de passe incorrect';
+            }
         }
     } else {
         $error = 'Veuillez remplir tous les champs';

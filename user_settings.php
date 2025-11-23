@@ -11,6 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $pdo = connectDB();
 
+if ($pdo === null) {
+    die('Erreur de connexion à la base de données. Veuillez vérifier votre configuration.');
+}
+
 // Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {

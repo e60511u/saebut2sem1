@@ -29,9 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $pdo = connectDB();
         
-        // Vérifier si l'email ou le pseudo existe déjà
-        $stmt = $pdo->prepare("SELECT id_utilisateur FROM Utilisateur WHERE email = ? OR pseudo = ?");
-        $stmt->execute([$email, $pseudo]);
+        if ($pdo === null) {
+            $error = 'Erreur de connexion à la base de données';
+        } else {
+            // Vérifier si l'email ou le pseudo existe déjà
+            $stmt = $pdo->prepare("SELECT id_utilisateur FROM Utilisateur WHERE email = ? OR pseudo = ?");
+            $stmt->execute([$email, $pseudo]);
         
         if ($stmt->fetch()) {
             $error = 'Cet email ou pseudo est déjà utilisé';
@@ -56,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (PDOException $e) {
                 $error = 'Erreur lors de la création du compte';
             }
+        }
         }
     }
 }

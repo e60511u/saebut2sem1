@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Si le fichier ou dossier n'existe pas
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Ajouter .php automatiquement
+RewriteRule ^(.+)$ $1.php [L]

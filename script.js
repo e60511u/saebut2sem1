@@ -35,7 +35,7 @@ let parkingIntermediaire = null;
 let orientationActuelle = 0;
 let suivreUtilisateur = true;
 
-// Écouter l'orientation de l'appareil
+// Obtenir l'orientation de l'appareil
 if (window.DeviceOrientationEvent) {
   window.addEventListener('deviceorientationabsolute', (event) => {
     if (event.absolute && event.alpha !== null) {
@@ -50,7 +50,7 @@ if (window.DeviceOrientationEvent) {
     }
   });
   
-  // Fallback pour les appareils qui ne supportent pas deviceorientationabsolute
+  // Pour les appareils qui ne supportent pas deviceorientationabsolute
   window.addEventListener('deviceorientation', (event) => {
     if (event.alpha !== null) {
       orientationActuelle = event.webkitCompassHeading || event.alpha;
@@ -127,7 +127,7 @@ async function calculerItineraire(debut, fin) {
 async function chargerParkings() {
   try {
     // Charger les parkings avec disponibilité en temps réel
-    const reponse1 = await fetch('https://maps.eurometropolemetz.eu/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:pub_tsp_sta&srsName=EPSG:4326&outputFormat=application%2Fjson&cql_filter=id%20is%20not%20null');
+    const reponse1 = await fetch('https://maps.eurometropolemetz.eu/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:pub_tsp_sta&srsName=EPSG:4326&outputFormat=json');
     const donnees1 = await reponse1.json();
     
     // Charger les places supplémentaires
@@ -147,8 +147,10 @@ async function chargerParkings() {
     donnees1.features.forEach(feature => {
       const coords = feature.geometry.coordinates;
       const nom = feature.properties.lib || 'Parking';
-      const disponibles = feature.properties.place_libre || 0;
-      const total = feature.properties.place_total || 0;
+      const disponibles = feature.properties.place_libre;
+      const total = feature.properties.place_total;
+      const type = feature.properties.typ || '';
+      const cout = feature.properties.cout;
       
       const iconeParking = L.divIcon({
         html: `<div style="background: #8A0808; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
@@ -157,10 +159,20 @@ async function chargerParkings() {
         iconAnchor: [6, 6]
       });
       
+      // Construire le contenu du popup en fonction des données disponibles
+      let infosDisponibilite = '';
+      if (disponibles !== null && total !== null) {
+        infosDisponibilite = `Disponibles: ${disponibles}/${total}<br>`;
+      } else if (total !== null) {
+        infosDisponibilite = `Total: ${total} places<br>`;
+      }
+      
       const contenuPopup = `
         <div>
           <b>${nom}</b><br>
-          Disponibles: ${disponibles}/${total}<br>
+          ${type && type !== 'aérien' ? `Type: ${type}<br>` : ''}
+          ${infosDisponibilite}
+          ${cout !== null ? `Coût: ${cout}<br>` : ''}
           <button onclick="demarrerGuidage(${coords[1]}, ${coords[0]})" style="margin-top: 10px; padding: 8px 16px; background: #8A0808; color: white; border: none; border-radius: 5px; cursor: pointer;">M'y guider</button>
         </div>
       `;
@@ -384,9 +396,18 @@ function afficherSuggestions(parkings) {
     // Affichage différent selon le type de parking
     if (feature.properties.lib) {
       // Parking classique avec disponibilité
+      let infoDisponibilite = '';
+      if (disponibles !== null && total !== null) {
+        infoDisponibilite = `Disponibles: ${disponibles}/${total}`;
+      } else if (total !== null) {
+        infoDisponibilite = `${total} places`;
+      } else {
+        infoDisponibilite = 'Informations non disponibles';
+      }
+      
       item.innerHTML = `
         <strong>${nom}</strong>
-        <div class="parking-info">Disponibles: ${disponibles}/${total}</div>
+        <div class="parking-info">${infoDisponibilite}</div>
       `;
     } else {
       // Place supplémentaire
