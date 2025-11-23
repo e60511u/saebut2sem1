@@ -18,8 +18,19 @@
 <button id="search-button">Search</button>
 </div>
   <div id="map"></div>
+  <div id="follow-switch-container" class="hidden">
+    <label class="switch-label">
+      <input type="checkbox" id="follow-user" checked>
+      <span class="switch-slider"></span>
+      <span class="switch-text">Track my position</span>
+    </label>
+  </div>
   <button id="nearest-parking">To nearest parking</button>
   <button id="stop-guidance" class="hidden">Stop guidance</button>
+  
+  <a href="user_settings.php" id="user-button" title="Paramètres utilisateur">
+    ⚙️
+  </a>
 
   <script src="script.js"></script>
 </body>

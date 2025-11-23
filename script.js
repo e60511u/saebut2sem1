@@ -33,6 +33,7 @@ let parkingIntermediaire = null;
 
 // Variable pour stocker l'orientation
 let orientationActuelle = 0;
+let suivreUtilisateur = true;
 
 // Écouter l'orientation de l'appareil
 if (window.DeviceOrientationEvent) {
@@ -71,6 +72,10 @@ function mettreAJourPositionUtilisateur() {
     
     if (marqueurUtilisateur) {
       marqueurUtilisateur.setLatLng(positionUtilisateur);
+      // Suivre l'utilisateur si le guidage est actif et le switch est activé
+      if (estEnGuidage && suivreUtilisateur) {
+        carte.setView(positionUtilisateur, 17, { animate: true });
+      }
     } else {
       marqueurUtilisateur = L.marker(positionUtilisateur, { icon: iconeUtilisateur, rotationAngle: orientationActuelle }).addTo(carte);
       carte.setView(positionUtilisateur, 15);
@@ -110,7 +115,10 @@ async function calculerItineraire(debut, fin) {
     opacity: 0.7
   }).addTo(carte);
 
-  carte.fitBounds(coucheItineraire.getBounds(), { padding: [50, 50] });
+  // Ne pas ajuster les bounds(partie de la carte affichée) si le suivi est actif pendant le guidage
+  if (!estEnGuidage || !suivreUtilisateur) {
+    carte.fitBounds(coucheItineraire.getBounds(), { padding: [50, 50] });
+  }
 }
 
 // Récupérer et afficher les parkings
@@ -229,6 +237,7 @@ window.demarrerGuidage = function(lat, lng) {
   document.getElementById('stop-guidance').classList.remove('hidden');
   document.getElementById('nearest-parking').classList.add('hidden');
   document.getElementById('search-bar').style.display = 'none';
+  document.getElementById('follow-switch-container').classList.remove('hidden');
   
   // Fermer le popup
   carte.closePopup();
@@ -263,6 +272,15 @@ document.getElementById('stop-guidance').addEventListener('click', function() {
   this.classList.add('hidden');
   document.getElementById('nearest-parking').classList.remove('hidden');
   document.getElementById('search-bar').style.display = '';
+  document.getElementById('follow-switch-container').classList.add('hidden');
+});
+
+// Switch pour suivre l'utilisateur
+document.getElementById('follow-user').addEventListener('change', function() {
+  suivreUtilisateur = this.checked;
+  if (suivreUtilisateur && estEnGuidage && positionUtilisateur) {
+    carte.setView(positionUtilisateur, 17, { animate: true });
+  }
 });
 
 // Bouton parking le plus proche
@@ -491,4 +509,5 @@ carte.on('click', async function(e) {
   document.getElementById('stop-guidance').classList.remove('hidden');
   document.getElementById('nearest-parking').classList.add('hidden');
   document.getElementById('search-bar').style.display = 'none';
+  document.getElementById('follow-switch-container').classList.remove('hidden');
 });
