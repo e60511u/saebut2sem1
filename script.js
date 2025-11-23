@@ -31,6 +31,39 @@ let coucheItineraireSecondaire = null;
 let destinationFinale = null;
 let parkingIntermediaire = null;
 
+// Variable pour stocker l'orientation
+let orientationActuelle = 0;
+
+// Écouter l'orientation de l'appareil
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientationabsolute', (event) => {
+    if (event.absolute && event.alpha !== null) {
+      orientationActuelle = event.alpha;
+      if (marqueurUtilisateur) {
+        const icon = marqueurUtilisateur.getElement();
+        if (icon) {
+          icon.style.transform = `rotate(${orientationActuelle}deg)`;
+          icon.style.transformOrigin = 'center';
+        }
+      }
+    }
+  });
+  
+  // Fallback pour les appareils qui ne supportent pas deviceorientationabsolute
+  window.addEventListener('deviceorientation', (event) => {
+    if (event.alpha !== null) {
+      orientationActuelle = event.webkitCompassHeading || event.alpha;
+      if (marqueurUtilisateur) {
+        const icon = marqueurUtilisateur.getElement();
+        if (icon) {
+          icon.style.transform = `rotate(${orientationActuelle}deg)`;
+          icon.style.transformOrigin = 'center';
+        }
+      }
+    }
+  });
+}
+
 // Géolocalisation
 function mettreAJourPositionUtilisateur() {
   navigator.geolocation.getCurrentPosition((position) => {
@@ -39,21 +72,21 @@ function mettreAJourPositionUtilisateur() {
     if (marqueurUtilisateur) {
       marqueurUtilisateur.setLatLng(positionUtilisateur);
     } else {
-      marqueurUtilisateur = L.marker(positionUtilisateur, { icon: iconeUtilisateur }).addTo(carte);
+      marqueurUtilisateur = L.marker(positionUtilisateur, { icon: iconeUtilisateur, rotationAngle: orientationActuelle }).addTo(carte);
       carte.setView(positionUtilisateur, 15);
     }
     
     // Recalculer l'itinéraire si en guidage
-    if (estEnGuidage && marqueurDestination) {
+    if (estEnGuidage && marqueurDestination && destinationFinale !== null && parkingIntermediaire !== null) {
       if (destinationFinale && parkingIntermediaire) {
-        // Guidage avec parking intermédiaire
+        // Guidage avec parking intermédiaire - ne recalculer que l'itinéraire principal
         calculerItineraire(positionUtilisateur, [parkingIntermediaire.lat, parkingIntermediaire.lng]);
-        calculerItineraireSecondaire([parkingIntermediaire.lat, parkingIntermediaire.lng], [destinationFinale.lat, destinationFinale.lng]);
-      } else {
-        // Guidage direct vers un parking
-        const destLatLng = marqueurDestination.getLatLng();
-        calculerItineraire(positionUtilisateur, [destLatLng.lat, destLatLng.lng]);
+        // L'itinéraire secondaire reste fixe et n'est pas recalculé
       }
+    } else if (estEnGuidage && marqueurDestination) {
+      // Guidage direct vers un parking
+      const destLatLng = marqueurDestination.getLatLng();
+      calculerItineraire(positionUtilisateur, [destLatLng.lat, destLatLng.lng]);
     }
   });
 }
@@ -87,7 +120,7 @@ async function chargerParkings() {
     const reponse1 = await fetch('https://maps.eurometropolemetz.eu/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:pub_tsp_sta&srsName=EPSG:4326&outputFormat=application%2Fjson&cql_filter=id%20is%20not%20null');
     const donnees1 = await reponse1.json();
     
-    // Charger les places PMR
+    // Charger les places supplémentaires
     const reponse2 = await fetch('https://maps.eurometropolemetz.eu/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=public:pub_acc_sta&srsName=EPSG:4326&outputFormat=json');
     const donnees2 = await reponse2.json();
     
@@ -149,7 +182,7 @@ async function chargerParkings() {
           <b>${voie}</b><br>
           ${quartier ? `Quartier: ${quartier}<br>` : ''}
           ${nombre > 1 ? `${nombre} places<br>` : ''}
-          ${config ? `Config: ${config}<br>` : ''}
+          ${config ? `Configuration: ${config}<br>` : ''}
           <button onclick="demarrerGuidage(${coords[1]}, ${coords[0]})" style="margin-top: 10px; padding: 8px 16px; background: #808080; color: white; border: none; border-radius: 5px; cursor: pointer;">M'y guider</button>
         </div>
       `;
@@ -208,11 +241,20 @@ document.getElementById('stop-guidance').addEventListener('click', function() {
   parkingIntermediaire = null;
   
   // Supprimer l'itinéraire
-  if (coucheItineraire) carte.removeLayer(coucheItineraire);
-  if (coucheItineraireSecondaire) carte.removeLayer(coucheItineraireSecondaire);
+  if (coucheItineraire) {
+    carte.removeLayer(coucheItineraire);
+    coucheItineraire = null;
+  }
+  if (coucheItineraireSecondaire) {
+    carte.removeLayer(coucheItineraireSecondaire);
+    coucheItineraireSecondaire = null;
+  }
   
   // Supprimer le marqueur de destination
-  if (marqueurDestination) carte.removeLayer(marqueurDestination);
+  if (marqueurDestination) {
+    carte.removeLayer(marqueurDestination);
+    marqueurDestination = null;
+  }
   
   // Réafficher les parkings
   chargerParkings();
@@ -287,14 +329,15 @@ async function calculerItineraireSecondaire(debut, fin) {
 const inputRecherche = document.getElementById('site-search');
 const suggestionsList = document.getElementById('suggestions');
 const searchButton = document.getElementById('search-button');
-// Fonction pour filtrer les parkings
+// Fonction pour filtrer les parkings par nom
 function filtrerParkings(recherche) {
   if (!donneesParkings || !recherche) return [];
   
   const rechercheMin = recherche.toLowerCase();
   return donneesParkings.features.filter(feature => {
-    const nom = feature.properties.lib || '';
-    return nom.toLowerCase().includes(rechercheMin);
+    const nom = feature.properties.lib || feature.properties.voie || '';
+    const quartier = feature.properties.quartier || '';
+    return nom.toLowerCase().includes(rechercheMin) || quartier.toLowerCase().includes(rechercheMin);
   });
 }
 
@@ -309,16 +352,28 @@ function afficherSuggestions(parkings) {
   
   parkings.forEach(feature => {
     const coords = feature.geometry.coordinates;
-    const nom = feature.properties.lib || 'Parking';
+    const nom = feature.properties.lib || feature.properties.voie || 'Parking';
     const disponibles = feature.properties.place_libre || 0;
     const total = feature.properties.place_total || 0;
+    const quartier = feature.properties.quartier || '';
     
     const item = document.createElement('div');
     item.className = 'suggestion-item';
-    item.innerHTML = `
-      <strong>${nom}</strong>
-      <div class="parking-info">Disponibles: ${disponibles}/${total}</div>
-    `;
+    
+    // Affichage différent selon le type de parking
+    if (feature.properties.lib) {
+      // Parking classique avec disponibilité
+      item.innerHTML = `
+        <strong>${nom}</strong>
+        <div class="parking-info">Disponibles: ${disponibles}/${total}</div>
+      `;
+    } else {
+      // Place supplémentaire
+      item.innerHTML = `
+        <strong>${nom}</strong>
+        <div class="parking-info">${quartier ? `Quartier: ${quartier}` : ''}</div>
+      `;
+    }
     
     item.addEventListener('click', () => {
       inputRecherche.value = nom;
