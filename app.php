@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -28,9 +31,15 @@
   <button id="nearest-parking">To nearest parking</button>
   <button id="stop-guidance" class="hidden">Stop guidance</button>
   
-  <a href="user_settings.php" id="user-button" title="Paramètres utilisateur">
-    ⚙️
-  </a>
+  <?php if (isset($_SESSION['user_id'])): ?>
+    <a href="user_settings.php" id="user-button" title="Paramètres utilisateur">
+      ⚙️
+    </a>
+  <?php else: ?>
+    <a href="login.php" id="user-button" title="Se connecter">
+      👤
+    </a>
+  <?php endif; ?>
 
   <script src="script.js"></script>
 </body>

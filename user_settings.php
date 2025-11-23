@@ -2,9 +2,10 @@
 session_start();
 require_once 'db.php';
 
-// Initialiser l'ID utilisateur (à remplacer par un système d'authentification réel)
+// Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
-    $_SESSION['user_id'] = 1; // ID par défaut pour le développement
+    header('Location: login.php');
+    exit;
 }
 
 $user_id = $_SESSION['user_id'];
@@ -254,7 +255,10 @@ $favorites = $stmt->fetchAll();
 </head>
 <body>
     <div class="container">
-        <a href="app.php" class="back-link">← Retour à la carte</a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <a href="app.php" class="back-link">← Retour à la carte</a>
+            <a href="logout.php" class="back-link" style="color: #666;">Déconnexion</a>
+        </div>
         
         <h1>Paramètres utilisateur</h1>
         
