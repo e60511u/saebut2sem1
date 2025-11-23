@@ -1,4 +1,4 @@
-const carte = L.map('map').setView([0, 0], 2);
+const carte = L.map('map').setView([49.119, 6.175], 13);
 
 // Utilisation d'OpenStreetMap (pas besoin de clé API)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -64,6 +64,34 @@ if (window.DeviceOrientationEvent) {
     }
   });
 }
+
+
+
+// Créer une icône personnalisée avec un cœur
+const favoriteIcon = L.divIcon({
+  html: '<div style="font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">❤️</div>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30],
+  className: 'favorite-marker'
+});
+
+// Icône normale pour les parkings non favoris
+const normalIcon = L.divIcon({
+  html: '<div style="font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🅿️</div>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30],
+  className: 'normal-marker'
+});
+
+// Fonction pour vérifier si un parking est favori
+function isFavorite(parkingId) {
+  return userFavorites.some(fav => fav.ref_parking_api === parkingId);
+}
+
+
+
 
 // Géolocalisation
 function mettreAJourPositionUtilisateur() {
@@ -183,6 +211,44 @@ async function chargerParkings() {
       
       marqueursParkings.push(marqueur);
     });
+
+
+    // Afficher dans le popUp les favoris ou pas 
+    function createPopupContent(parking) {
+  const isFav = isFavorite(parking.id);
+  const customName = getFavoriteCustomName(parking.id);
+  
+  let content = `
+    <div class="parking-popup">
+      <h3>${parking.nom}</h3>
+      ${customName ? `<p><i>${customName}</i></p>` : ''}
+      <p>Places: ${parking.places_dispo}</p>
+      <form method="POST" action="">
+        <input type="hidden" name="parking_id" value="${parking.id}">
+        ${!isFav ? `
+          <input type="text" name="custom_name" placeholder="Nom personnalisé (optionnel)">
+          <button type="submit" name="add_favorite">❤️ Ajouter aux favoris</button>
+        ` : `
+          <button type="submit" name="remove_favorite">💔 Retirer des favoris</button>
+        `}
+      </form>
+    </div>
+  `;
+  
+  return content;
+}
+
+// Fonction pour vérifier si un parking est favori
+function isFavorite(parkingId) {
+  return userFavorites.some(fav => fav.ref_parking_api === parkingId);
+}
+
+// Fonction pour obtenir le nom personnalisé d'un favori
+function getFavoriteCustomName(parkingId) {
+  const favorite = userFavorites.find(fav => fav.ref_parking_api === parkingId);
+  return favorite ? favorite.nom_custom : null;
+}
+
     
     // Afficher les places de stationnement supplémentaires
     donnees2.features.forEach(feature => {
