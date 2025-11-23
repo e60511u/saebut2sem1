@@ -100,6 +100,7 @@ mettreAJourPositionUtilisateur();
 setInterval(mettreAJourPositionUtilisateur, 5000);
 
 // Calculer l'itinéraire
+// Fonction async car elle effectue un appel réseau (fetch) vers l'API OSRM et doit attendre la réponse avant de pouvoir tracer l'itinéraire sur la carte
 async function calculerItineraire(debut, fin) {
   if (coucheItineraire) carte.removeLayer(coucheItineraire);
 
@@ -122,6 +123,7 @@ async function calculerItineraire(debut, fin) {
 }
 
 // Récupérer et afficher les parkings
+// Fonction async car elle effectue plusieurs appels fetch
 async function chargerParkings() {
   try {
     // Charger les parkings avec disponibilité en temps réel
@@ -327,6 +329,7 @@ function trouverParkingLePlusProche(lat, lng) {
 }
 
 // Calculer le deuxième itinéraire (du parking à la destination)
+// Fonction async car elle effectue un appel réseau fetch
 async function calculerItineraireSecondaire(debut, fin) {
   if (coucheItineraireSecondaire) carte.removeLayer(coucheItineraireSecondaire);
 
@@ -471,6 +474,7 @@ inputRecherche.addEventListener('keypress', (e) => {
 
 // Clic sur la carte
 carte.on('click', async function(e) {
+  // Fonction async car elle appelle calculerItineraire() et calculerItineraireSecondaire()
   if (estEnGuidage) return;
   if (!positionUtilisateur) return;
   
