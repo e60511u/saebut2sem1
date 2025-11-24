@@ -1,6 +1,6 @@
 const carte = L.map('map').setView([0, 0], 2);
 
-// Utilisation d'OpenStreetMap (pas besoin de clé API)
+// Tuiles OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -30,12 +30,10 @@ let donneesParkings = null;
 let coucheItineraireSecondaire = null;
 let destinationFinale = null;
 let parkingIntermediaire = null;
-
-// Variable pour stocker l'orientation
 let orientationActuelle = 0;
 let suivreUtilisateur = true;
 
-// Obtenir l'orientation de l'appareil
+// Orientation de l'appareil
 if (window.DeviceOrientationEvent) {
   window.addEventListener('deviceorientationabsolute', (event) => {
     if (event.absolute && event.alpha !== null) {
@@ -50,7 +48,7 @@ if (window.DeviceOrientationEvent) {
     }
   });
   
-  // Pour les appareils qui ne supportent pas deviceorientationabsolute
+  // Fallback pour deviceorientation
   window.addEventListener('deviceorientation', (event) => {
     if (event.alpha !== null) {
       orientationActuelle = event.webkitCompassHeading || event.alpha;
@@ -65,14 +63,14 @@ if (window.DeviceOrientationEvent) {
   });
 }
 
-// Géolocalisation
+// Mise à jour position
 function mettreAJourPositionUtilisateur() {
   navigator.geolocation.getCurrentPosition((position) => {
     positionUtilisateur = [position.coords.latitude, position.coords.longitude];
     
     if (marqueurUtilisateur) {
       marqueurUtilisateur.setLatLng(positionUtilisateur);
-      // Suivre l'utilisateur si le guidage est actif et le switch est activé
+      // Suivre si guidage actif
       if (estEnGuidage && suivreUtilisateur) {
         carte.setView(positionUtilisateur, 17, { animate: true });
       }
@@ -81,15 +79,14 @@ function mettreAJourPositionUtilisateur() {
       carte.setView(positionUtilisateur, 15);
     }
     
-    // Recalculer l'itinéraire si en guidage
+    // Recalculer si guidage actif
     if (estEnGuidage && marqueurDestination && destinationFinale !== null && parkingIntermediaire !== null) {
       if (destinationFinale && parkingIntermediaire) {
-        // Guidage avec parking intermédiaire - ne recalculer que l'itinéraire principal
+        // Recalculer l'itinéraire principal
         calculerItineraire(positionUtilisateur, [parkingIntermediaire.lat, parkingIntermediaire.lng]);
-        // L'itinéraire secondaire reste fixe et n'est pas recalculé
       }
     } else if (estEnGuidage && marqueurDestination) {
-      // Guidage direct vers un parking
+      // Guidage direct
       const destLatLng = marqueurDestination.getLatLng();
       calculerItineraire(positionUtilisateur, [destLatLng.lat, destLatLng.lng]);
     }
@@ -100,7 +97,6 @@ mettreAJourPositionUtilisateur();
 setInterval(mettreAJourPositionUtilisateur, 5000);
 
 // Calculer l'itinéraire
-// Fonction async car elle effectue un appel réseau (fetch) vers l'API OSRM et doit attendre la réponse avant de pouvoir tracer l'itinéraire sur la carte
 async function calculerItineraire(debut, fin) {
   if (coucheItineraire) carte.removeLayer(coucheItineraire);
 
@@ -116,14 +112,13 @@ async function calculerItineraire(debut, fin) {
     opacity: 0.7
   }).addTo(carte);
 
-  // Ne pas ajuster les bounds(partie de la carte affichée) si le suivi est actif pendant le guidage
+  // Ne pas ajuster les bounds si suivi actif
   if (!estEnGuidage || !suivreUtilisateur) {
     carte.fitBounds(coucheItineraire.getBounds(), { padding: [50, 50] });
   }
 }
 
-// Récupérer et afficher les parkings
-// Fonction async car elle effectue plusieurs appels fetch
+// Charger les parkings
 async function chargerParkings() {
   try {
     // Charger les parkings avec disponibilité en temps réel
@@ -223,28 +218,28 @@ async function chargerParkings() {
 chargerParkings();
 setInterval(chargerParkings, 30000);
 
-// Démarrer le guidage vers un parking
+// Démarrer le guidage
 window.demarrerGuidage = function(lat, lng) {
   if (!positionUtilisateur) return;
   
   estEnGuidage = true;
   
-  // Réinitialiser les variables de destination
+  // Réinitialiser destination
   destinationFinale = null;
   parkingIntermediaire = null;
   
-  // Cacher tous les parkings
+  // Cacher les parkings
   marqueursParkings.forEach(marqueur => carte.removeLayer(marqueur));
   
-  // Supprimer le marqueur de destination précédent
+  // Supprimer marqueur précédent
   if (marqueurDestination) carte.removeLayer(marqueurDestination);
   if (coucheItineraire) carte.removeLayer(coucheItineraire);
   if (coucheItineraireSecondaire) carte.removeLayer(coucheItineraireSecondaire);
   
-  // Ajouter le marqueur de destination
+  // Ajouter marqueur destination
   marqueurDestination = L.marker([lat, lng], { icon: iconeDestination }).addTo(carte);
   
-  // Calculer l'itinéraire
+  // Calculer itinéraire
   calculerItineraire(positionUtilisateur, [lat, lng]);
   
   // Afficher le bouton stopper et cacher le bouton nearest-parking
@@ -253,17 +248,17 @@ window.demarrerGuidage = function(lat, lng) {
   document.getElementById('search-bar').style.display = 'none';
   document.getElementById('follow-switch-container').classList.remove('hidden');
   
-  // Fermer le popup
+  // Fermer popup
   carte.closePopup();
 };
 
-// Stopper le guidage
+// Arrêter le guidage
 document.getElementById('stop-guidance').addEventListener('click', function() {
   estEnGuidage = false;
   destinationFinale = null;
   parkingIntermediaire = null;
   
-  // Supprimer l'itinéraire
+  // Supprimer itinéraire
   if (coucheItineraire) {
     carte.removeLayer(coucheItineraire);
     coucheItineraire = null;
@@ -273,23 +268,23 @@ document.getElementById('stop-guidance').addEventListener('click', function() {
     coucheItineraireSecondaire = null;
   }
   
-  // Supprimer le marqueur de destination
+  // Supprimer marqueur destination
   if (marqueurDestination) {
     carte.removeLayer(marqueurDestination);
     marqueurDestination = null;
   }
   
-  // Réafficher les parkings
+  // Réafficher parkings
   chargerParkings();
   
-  // Cacher le bouton stopper et réafficher le bouton nearest-parking
+  // Cacher/afficher boutons
   this.classList.add('hidden');
   document.getElementById('nearest-parking').classList.remove('hidden');
   document.getElementById('search-bar').style.display = '';
   document.getElementById('follow-switch-container').classList.add('hidden');
 });
 
-// Switch pour suivre l'utilisateur
+// Switch de suivi
 document.getElementById('follow-user').addEventListener('change', function() {
   suivreUtilisateur = this.checked;
   if (suivreUtilisateur && estEnGuidage && positionUtilisateur) {
@@ -340,8 +335,7 @@ function trouverParkingLePlusProche(lat, lng) {
   return plusProche;
 }
 
-// Calculer le deuxième itinéraire (du parking à la destination)
-// Fonction async car elle effectue un appel réseau fetch
+// Calculer l'itinéraire secondaire
 async function calculerItineraireSecondaire(debut, fin) {
   if (coucheItineraireSecondaire) carte.removeLayer(coucheItineraireSecondaire);
 
@@ -362,7 +356,8 @@ async function calculerItineraireSecondaire(debut, fin) {
 const inputRecherche = document.getElementById('site-search');
 const suggestionsList = document.getElementById('suggestions');
 const searchButton = document.getElementById('search-button');
-// Fonction pour filtrer les parkings par nom
+
+// Filtrer les parkings
 function filtrerParkings(recherche) {
   if (!donneesParkings || !recherche) return [];
   
@@ -374,7 +369,7 @@ function filtrerParkings(recherche) {
   });
 }
 
-// Afficher les suggestions
+// Afficher suggestions
 function afficherSuggestions(parkings) {
   suggestionsList.innerHTML = '';
   
@@ -393,7 +388,7 @@ function afficherSuggestions(parkings) {
     const item = document.createElement('div');
     item.className = 'suggestion-item';
     
-    // Affichage différent selon le type de parking
+    // Affichage selon type
     if (feature.properties.lib) {
       // Parking classique avec disponibilité
       let infoDisponibilite = '';
@@ -410,7 +405,6 @@ function afficherSuggestions(parkings) {
         <div class="parking-info">${infoDisponibilite}</div>
       `;
     } else {
-      // Place supplémentaire
       item.innerHTML = `
         <strong>${nom}</strong>
         <div class="parking-info">${quartier ? `Quartier: ${quartier}` : ''}</div>
@@ -420,9 +414,9 @@ function afficherSuggestions(parkings) {
     item.addEventListener('click', () => {
       inputRecherche.value = nom;
       suggestionsList.classList.add('hidden');
-      // Centrer sur le parking et ouvrir le popup
+      // Centrer sur le parking
       carte.setView([coords[1], coords[0]], 17);
-      // Trouver le marqueur correspondant et ouvrir son popup
+      // Ouvrir popup
       marqueursParkings.forEach(marqueur => {
         if (marqueur.getLatLng().lat === coords[1] && marqueur.getLatLng().lng === coords[0]) {
           marqueur.openPopup();
@@ -436,7 +430,7 @@ function afficherSuggestions(parkings) {
   suggestionsList.classList.remove('hidden');
 }
 
-// Écouter les changements dans l'input
+// Changements dans l'input
 inputRecherche.addEventListener('input', (e) => {
   const recherche = e.target.value.trim();
   
@@ -449,14 +443,14 @@ inputRecherche.addEventListener('input', (e) => {
   afficherSuggestions(parkingsFiltres);
 });
 
-// Cacher les suggestions lors du clic ailleurs
+// Cacher suggestions au clic ailleurs
 document.addEventListener('click', (e) => {
   if (!e.target.closest('#search-bar')) {
     suggestionsList.classList.add('hidden');
   }
 });
 
-// Bouton de recherche
+// Bouton recherche
 searchButton.addEventListener('click', () => {
   const recherche = inputRecherche.value.trim();
   
@@ -472,11 +466,11 @@ searchButton.addEventListener('click', () => {
     return;
   }
   
-  // Centrer sur le premier résultat
+  // Centrer sur premier résultat
   const coords = parkingsFiltres[0].geometry.coordinates;
   carte.setView([coords[1], coords[0]], 17);
   
-  // Ouvrir le popup du premier résultat
+  // Ouvrir popup
   marqueursParkings.forEach(marqueur => {
     if (marqueur.getLatLng().lat === coords[1] && marqueur.getLatLng().lng === coords[0]) {
       marqueur.openPopup();
@@ -486,51 +480,50 @@ searchButton.addEventListener('click', () => {
   suggestionsList.classList.add('hidden');
 });
 
-// Permettre la recherche avec la touche Entrée
+// Touche Entrée
 inputRecherche.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
     searchButton.click();
   }
 });
 
-// Clic sur la carte
+// Clic sur carte
 carte.on('click', async function(e) {
-  // Fonction async car elle appelle calculerItineraire() et calculerItineraireSecondaire()
   if (estEnGuidage) return;
   if (!positionUtilisateur) return;
   
   const latClic = e.latlng.lat;
   const lngClic = e.latlng.lng;
   
-  // Trouver le parking le plus proche
+  // Trouver parking le plus proche
   const parkingLePlusProche = trouverParkingLePlusProche(latClic, lngClic);
   
   if (!parkingLePlusProche) return;
   
   estEnGuidage = true;
   
-  // Supprimer les anciennes routes et marqueurs
+  // Supprimer anciennes routes
   if (marqueurDestination) carte.removeLayer(marqueurDestination);
   if (coucheItineraire) carte.removeLayer(coucheItineraire);
   if (coucheItineraireSecondaire) carte.removeLayer(coucheItineraireSecondaire);
   
-  // Stocker la destination finale et le parking intermédiaire
+  // Stocker destination et parking
   destinationFinale = { lat: latClic, lng: lngClic };
   parkingIntermediaire = parkingLePlusProche;
   
   // Cacher tous les parkings
   marqueursParkings.forEach(marqueur => carte.removeLayer(marqueur));
   
-  // Ajouter le marqueur de destination finale
+  // Ajouter marqueur destination finale
   marqueurDestination = L.marker([latClic, lngClic], { icon: iconeDestination }).addTo(carte);
   
-  // Calculer le trajet de l'utilisateur au parking
+  // Trajet vers parking
   await calculerItineraire(positionUtilisateur, [parkingLePlusProche.lat, parkingLePlusProche.lng]);
   
-  // Calculer le trajet du parking à la destination
+  // Trajet parking vers destination
   await calculerItineraireSecondaire([parkingLePlusProche.lat, parkingLePlusProche.lng], [latClic, lngClic]);
   
-  // Afficher le bouton stopper et cacher le bouton nearest-parking
+  // Afficher/cacher boutons
   document.getElementById('stop-guidance').classList.remove('hidden');
   document.getElementById('nearest-parking').classList.add('hidden');
   document.getElementById('search-bar').style.display = 'none';

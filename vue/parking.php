@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SAE Parking - Carte</title>
+  <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) : 'SAE Parking - Carte'; ?></title>
   
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
-  <link rel="stylesheet" href="assets/css/style.css"/>
+  <link rel="stylesheet" href="vue/assets/css/style.css"/>
 </head>
 <body>
   <div id="search-bar">
@@ -32,6 +32,6 @@
   <button id="nearest-parking">Au parking le plus proche</button>
   <button id="stop-guidance" class="hidden">Arrêter la navigation</button>
 
-  <script src="assets/js/script.js"></script>
+  <script src="vue/assets/js/script.js"></script>
 </body>
 </html>
