@@ -15,6 +15,10 @@ class User {
     
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
+        
+        if ($this->db === null) {
+            throw new Exception("La connexion à la base de données n'est pas disponible");
+        }
     }
     
     /**
