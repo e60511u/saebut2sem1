@@ -1,5 +1,11 @@
 <?php
+/**
+ * Déconnexion (version MVC)
+ */
 session_start();
-session_destroy();
-header('Location: login.php');
-exit;
+
+require_once 'controllers/AuthController.php';
+
+$authController = new AuthController();
+$authController->logout();
+?>

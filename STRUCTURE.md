@@ -1,115 +1,284 @@
-# Structure du Projet - SAE Parking App
+# 📁 STRUCTURE DU PROJET - SAE PARKING APP
 
-## 📁 Organisation des Fichiers
+## 🎯 Architecture MVC
 
-Le projet a été réorganisé selon les bonnes pratiques de développement web en séparant proprement les différents langages et responsabilités :
+Le projet suit maintenant une **architecture Modèle-Vue-Contrôleur (MVC)** professionnelle.
 
 ```
 sae but 2 sem1/
-├── assets/                  # Fichiers statiques (CSS, JS, images)
-│   ├── css/                # Feuilles de style
-│   │   ├── style.css       # Styles pour la carte principale (app.php)
-│   │   ├── login.css       # Styles pour la page de connexion
-│   │   ├── register.css    # Styles pour la page d'inscription
-│   │   └── user_settings.css # Styles pour les paramètres utilisateur
-│   └── js/                 # Scripts JavaScript
-│       └── script.js       # Logique de la carte interactive
 │
-├── config/                 # Configuration de l'application
-│   └── db.php             # Configuration et connexion à la base de données
+├── 📄 index.html              # Page d'accueil (portail)
+├── 📄 app.php                 # Carte interactive (MVC)
+├── 📄 login.php               # Connexion (MVC)
+├── 📄 register.php            # Inscription (MVC)
+├── 📄 user_settings.php       # Paramètres utilisateur (MVC)
+├── 📄 logout.php              # Déconnexion (MVC)
 │
-├── includes/              # Logique métier PHP (fonctions réutilisables)
-│   ├── auth.php          # Fonctions d'authentification (login, register, session)
-│   └── user.php          # Fonctions de gestion utilisateur (CRUD véhicules, favoris)
+├── 📂 models/                 # 🔷 MODÈLES - Données & Logique Métier
+│   ├── Database.php           #   Singleton de connexion BDD
+│   ├── User.php               #   Gestion des utilisateurs
+│   ├── Vehicle.php            #   Gestion des véhicules
+│   └── Favorite.php           #   Gestion des favoris
 │
-├── app.php               # Page principale avec la carte interactive
-├── login.php             # Page de connexion
-├── register.php          # Page d'inscription
-├── user_settings.php     # Page des paramètres utilisateur
-├── logout.php            # Script de déconnexion
-└── db.sql                # Script SQL de création de la base de données
+├── 📂 views/                  # 🎨 VUES - Interface Utilisateur
+│   ├── layouts/
+│   │   └── base.php           #   Template de base réutilisable
+│   ├── auth/
+│   │   ├── login.php          #   Vue connexion
+│   │   └── register.php       #   Vue inscription
+│   ├── user/
+│   │   └── settings.php       #   Vue paramètres utilisateur
+│   └── parking/
+│       └── map.php            #   Vue carte interactive
+│
+├── 📂 controllers/            # 🎮 CONTRÔLEURS - Logique de Coordination
+│   ├── AuthController.php     #   Authentification & Sessions
+│   ├── UserController.php     #   Gestion utilisateur & entités
+│   └── ParkingController.php  #   Affichage carte
+│
+├── 📂 assets/                 # 🎨 Ressources Statiques
+│   ├── css/
+│   │   ├── style.css          #   Styles carte principale
+│   │   ├── login.css          #   Styles connexion
+│   │   ├── register.css       #   Styles inscription
+│   │   └── user_settings.css  #   Styles paramètres
+│   └── js/
+│       └── script.js          #   Logique Leaflet (carte)
+│
+├── 📂 config/                 # ⚙️ Configuration
+│   ├── db.php                 #   Configuration BDD (PDO)
+│   └── db.example.php         #   Template de configuration
+│
+├── 📂 old_classic_version/    # 💾 Sauvegarde de l'ancienne version
+│   ├── app.php                #   Ancienne version monolithique
+│   ├── login.php              #   Ancienne version monolithique
+│   ├── register.php           #   Ancienne version monolithique
+│   ├── user_settings.php      #   Ancienne version monolithique
+│   ├── logout.php             #   Ancienne version monolithique
+│   ├── index.html             #   Ancien index
+│   └── includes/              #   Anciens fichiers fonctionnels
+│       ├── auth.php
+│       └── user.php
+│
+├── 📂 Documentation           # 📚 Documentation Complète
+│   ├── ARCHITECTURE_MVC.md    #   Guide détaillé de l'architecture MVC
+│   ├── MVC_IMPLEMENTATION.md  #   Résumé de l'implémentation MVC
+│   ├── STRUCTURE.md           #   Ce fichier (structure du projet)
+│   ├── CHANGEMENTS.md         #   Résumé des modifications
+│   ├── RECAP.md               #   Récapitulatif général
+│   └── README.md              #   Documentation originale
+│
+└── 📂 Utilitaires             # 🛠️ Fichiers Utilitaires
+    ├── check.php              #   Vérification de l'installation
+    ├── db.sql                 #   Script de création BDD
+    ├── .gitignore             #   Fichiers à ignorer par Git
+    └── .env                   #   Variables d'environnement (à créer)
 ```
 
-## 🎯 Principes Appliqués
+---
 
-### 1. **Séparation des Préoccupations (Separation of Concerns)**
-- **HTML** : Structure et contenu (dans les fichiers .php)
-- **CSS** : Présentation et styles (dans `assets/css/`)
-- **JavaScript** : Comportement dynamique (dans `assets/js/`)
-- **PHP** : Logique métier et accès aux données (dans `includes/`)
+## 🏗️ Architecture MVC Détaillée
 
-### 2. **Réutilisabilité du Code**
-Les fonctions communes ont été extraites dans des fichiers dédiés :
+### 🔷 MODÈLES (`models/`)
 
-#### `includes/auth.php`
-- `loginUser($identifier, $password)` - Authentification
-- `registerUser($pseudo, $email, $password)` - Inscription
-- `initUserSession($user)` - Initialisation de session
-- `isLoggedIn()` - Vérification de connexion
-- `requireLogin()` - Protection des pages
+Les modèles gèrent les **données** et la **logique métier**.
 
-#### `includes/user.php`
-- `getUserById($user_id)` - Récupération d'un utilisateur
-- `updateUser(...)` - Mise à jour des infos utilisateur
-- `getUserVehicles($user_id)` - Liste des véhicules
-- `addVehicle(...)` / `deleteVehicle(...)` - Gestion des véhicules
-- `getUserFavorites($user_id)` - Liste des favoris
-- `addFavorite(...)` / `deleteFavorite(...)` - Gestion des favoris
-- `getVehicleTypes()` / `getMotorisations()` - Données de référence
+#### `Database.php` - Connexion à la base de données
+- **Pattern**: Singleton
+- **Méthodes**: 
+  - `getInstance()` - Obtenir l'instance unique
+  - `getConnection()` - Obtenir la connexion PDO
 
-### 3. **Maintenabilité**
-- Un fichier CSS par page facilite les modifications
-- La logique métier centralisée évite la duplication
-- Les chemins relatifs permettent la portabilité
+#### `User.php` - Gestion des utilisateurs
+- **Méthodes**:
+  - `findByIdentifier($identifier)` - Recherche par pseudo/email
+  - `findById($id)` - Recherche par ID
+  - `create($pseudo, $email, $password)` - Créer un utilisateur
+  - `update($id, $data)` - Mettre à jour un utilisateur
+  - `verifyPassword($password)` - Vérifier le mot de passe
+  - `hydrate($data)` - Remplir l'objet avec des données
+  - `toArray()` - Convertir en tableau
 
-### 4. **Sécurité**
-- Séparation du code sensible (config DB) dans un dossier dédié
-- Utilisation de fonctions pour éviter les injections SQL
-- Validation centralisée des données
+#### `Vehicle.php` - Gestion des véhicules
+- **Méthodes**:
+  - `findByUserId($userId)` - Liste des véhicules d'un utilisateur
+  - `create()` - Ajouter un véhicule
+  - `delete($vehicleId, $userId)` - Supprimer un véhicule
+  - `getTypes()` - Types de véhicules disponibles
+  - `getMotorisations()` - Motorisations disponibles
 
-## 🔧 Utilisation
+#### `Favorite.php` - Gestion des favoris
+- **Méthodes**:
+  - `findByUserId($userId)` - Liste des favoris d'un utilisateur
+  - `create($userId, $parkingId, $customName)` - Ajouter un favori
+  - `delete($favoriteId, $userId)` - Supprimer un favori
 
-### Pages Publiques
-- `login.php` - Connexion (redirige vers `app.php` si déjà connecté)
-- `register.php` - Inscription (redirige vers `app.php` si déjà connecté)
+---
 
-### Pages Protégées (nécessitent une connexion)
-- `app.php` - Carte interactive avec parkings
-- `user_settings.php` - Gestion du profil, véhicules et favoris
-- `logout.php` - Déconnexion
+### 🎮 CONTRÔLEURS (`controllers/`)
 
-### Fichiers Inclus
-Les fichiers `includes/` ne doivent **jamais** être appelés directement dans le navigateur. Ils sont chargés via `require_once` dans les pages PHP.
+Les contrôleurs gèrent la **logique de coordination** entre modèles et vues.
 
-## 🎨 Personnalisation
+#### `AuthController.php` - Authentification
+- **Méthodes**:
+  - `showLogin()` - Afficher la vue de connexion
+  - `login()` - Traiter la connexion
+  - `showRegister()` - Afficher la vue d'inscription
+  - `register()` - Traiter l'inscription
+  - `logout()` - Déconnecter l'utilisateur
+  - `isLoggedIn()` - Vérifier si l'utilisateur est connecté
+  - `requireLogin()` - Rediriger si non connecté
+  - `initSession($user)` - Initialiser la session utilisateur
 
-### Modifier les Couleurs
-Tous les styles utilisent une palette de couleurs cohérente :
-- **Primaire** : `#8A0808` (rouge foncé)
-- **Secondaire** : `#B71C1C` (rouge clair au survol)
-- **Gris** : `#666`, `#333` pour le texte
+#### `UserController.php` - Gestion utilisateur
+- **Méthodes**:
+  - `showSettings()` - Afficher la page paramètres
+  - `updateProfile()` - Mettre à jour le profil
+  - `addVehicle()` - Ajouter un véhicule
+  - `deleteVehicle()` - Supprimer un véhicule
+  - `addFavorite()` - Ajouter un favori
+  - `deleteFavorite()` - Supprimer un favori
 
-Modifiez ces valeurs dans les fichiers CSS pour changer l'apparence globale.
+#### `ParkingController.php` - Carte des parkings
+- **Méthodes**:
+  - `showMap()` - Afficher la carte interactive
 
-### Ajouter une Nouvelle Page
-1. Créer le fichier PHP à la racine
-2. Créer le CSS correspondant dans `assets/css/`
-3. Inclure les fichiers nécessaires : `includes/auth.php`, `includes/user.php`
-4. Utiliser `requireLogin()` pour protéger la page si nécessaire
+---
 
-## 📝 Bonnes Pratiques Respectées
+### 🎨 VUES (`views/`)
 
-✅ **DRY** (Don't Repeat Yourself) - Pas de duplication de code  
-✅ **Séparation HTML/CSS/JS/PHP** - Chaque langage dans son fichier  
-✅ **Modularité** - Fonctions réutilisables et testables  
-✅ **Nomenclature claire** - Noms de fichiers et fonctions explicites  
-✅ **Architecture MVC-like** - Séparation vue/logique/données  
-✅ **Sécurité** - Préparation des requêtes SQL, hashage des mots de passe
+Les vues gèrent **l'affichage** de l'interface utilisateur.
 
-## 🚀 Prochaines Améliorations Possibles
+#### Structure des Vues
+```
+views/
+├── layouts/base.php         # Template de base avec <html>, <head>, <body>
+├── auth/login.php           # Formulaire de connexion
+├── auth/register.php        # Formulaire d'inscription
+├── user/settings.php        # Interface des paramètres utilisateur
+└── parking/map.php          # Carte interactive Leaflet
+```
 
-- Créer un dossier `pages/` pour les vues PHP
-- Ajouter un système de templates (header/footer communs)
-- Implémenter un routeur pour des URLs propres
-- Ajouter des tests unitaires pour les fonctions
-- Créer un fichier de constantes pour les couleurs et config
+#### Système de Layout
+Toutes les vues utilisent le **template de base** (`layouts/base.php`) :
+- `$pageTitle` - Titre de la page
+- `$additionalHead` - CSS/JS supplémentaires
+- `$content` - Contenu principal de la page
+
+---
+
+## 🔄 Flux de Fonctionnement
+
+### Exemple : Connexion d'un utilisateur
+
+1. **Point d'entrée** : `login.php`
+   ```php
+   require_once 'controllers/AuthController.php';
+   $authController = new AuthController();
+   ```
+
+2. **Contrôleur** : `AuthController->login()`
+   - Récupère les données POST
+   - Valide les données
+   - Appelle le modèle
+
+3. **Modèle** : `User->findByIdentifier()`
+   - Recherche l'utilisateur dans la BDD
+   - Vérifie le mot de passe
+   - Retourne les données
+
+4. **Contrôleur** : Traite le résultat
+   - Initialise la session si succès
+   - Prépare le message d'erreur sinon
+
+5. **Vue** : `views/auth/login.php`
+   - Affiche le formulaire
+   - Affiche les erreurs éventuelles
+   - Utilise le layout de base
+
+---
+
+## 📊 Base de Données
+
+### Tables Principales
+
+- **Utilisateur** - Informations des utilisateurs
+- **Vehicule** - Véhicules des utilisateurs
+- **Favori** - Parkings favoris
+- **Ref_Type_Vehicule** - Types de véhicules (voiture, moto, etc.)
+- **Ref_Motorisation** - Motorisations (électrique, thermique, etc.)
+
+### Configuration
+Fichier : `config/db.php`
+```php
+$db_host = 'localhost';
+$db_dbname = 'e40250u_sae301';
+$db_username = 'root';
+$db_password = '';
+```
+
+---
+
+## ✨ Avantages de l'Architecture MVC
+
+1. **Séparation des responsabilités** - Chaque composant a un rôle clair
+2. **Réutilisabilité** - Les modèles sont utilisables partout
+3. **Maintenabilité** - Modifications faciles et ciblées
+4. **Testabilité** - Tests unitaires possibles
+5. **Collaboration** - Plusieurs développeurs peuvent travailler en parallèle
+6. **Évolutivité** - Ajout de fonctionnalités facilité
+7. **Professionnalisme** - Standard de l'industrie
+
+---
+
+## 🚀 Utilisation
+
+### Pages Principales
+- **index.html** - Page d'accueil/portail
+- **app.php** - Carte interactive des parkings
+- **login.php** - Connexion utilisateur
+- **register.php** - Inscription utilisateur
+- **user_settings.php** - Gestion du profil/véhicules/favoris
+- **logout.php** - Déconnexion
+
+### Pour Développeurs
+
+#### Ajouter un nouveau modèle
+1. Créer `models/MonModele.php`
+2. Étendre les méthodes CRUD de base
+3. Utiliser `Database::getInstance()->getConnection()`
+
+#### Ajouter un nouveau contrôleur
+1. Créer `controllers/MonController.php`
+2. Importer les modèles nécessaires
+3. Créer les méthodes publiques
+
+#### Ajouter une nouvelle vue
+1. Créer `views/dossier/ma_vue.php`
+2. Utiliser le système de layout avec `base.php`
+3. Appeler depuis le contrôleur
+
+---
+
+## 📚 Documentation Supplémentaire
+
+- **ARCHITECTURE_MVC.md** - Guide complet de l'architecture MVC (400+ lignes)
+- **MVC_IMPLEMENTATION.md** - Résumé de l'implémentation
+- **CHANGEMENTS.md** - Liste des modifications effectuées
+- **README.md** - Documentation originale du projet
+
+---
+
+## 🔧 Technologies
+
+- **Backend** : PHP 7+ avec PDO
+- **Base de données** : MySQL
+- **Frontend** : HTML5, CSS3, JavaScript
+- **Cartographie** : Leaflet.js 1.9.4
+- **Tuiles** : OpenStreetMap
+- **Routing** : OSRM (Open Source Routing Machine)
+- **Architecture** : MVC (Modèle-Vue-Contrôleur)
+
+---
+
+*Dernière mise à jour : 24 novembre 2025 - Migration complète vers architecture MVC*

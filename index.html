@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAE Parking App - Guide de Navigation</title>
+    <title>SAE Parking App - Architecture MVC</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 16px;
@@ -41,6 +41,17 @@
             font-size: 16px;
         }
         
+        .badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
         .section {
             margin-bottom: 40px;
         }
@@ -55,7 +66,7 @@
         
         .card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -65,11 +76,18 @@
             border-radius: 12px;
             padding: 20px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
         }
         
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            border-color: #8A0808;
+        }
+        
+        .card.mvc {
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+            border: 2px solid #4caf50;
         }
         
         .card h3 {
@@ -99,12 +117,51 @@
             background: #B71C1C;
         }
         
+        .btn-mvc {
+            background: #4caf50;
+        }
+        
+        .btn-mvc:hover {
+            background: #66bb6a;
+        }
+        
         .btn-secondary {
             background: #666;
         }
         
         .btn-secondary:hover {
             background: #888;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .info-box.success {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+        
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .info-box.success h4 {
+            color: #2e7d32;
+        }
+        
+        .info-box p {
+            color: #0d47a1;
+            margin: 0;
+        }
+        
+        .info-box.success p {
+            color: #1b5e20;
         }
         
         .feature-list {
@@ -124,43 +181,32 @@
         
         .feature-list li::before {
             content: "✓ ";
-            color: #8A0808;
+            color: #4caf50;
             font-weight: bold;
             margin-right: 10px;
         }
         
-        .info-box {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-            padding: 15px;
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
             margin: 20px 0;
-            border-radius: 4px;
         }
         
-        .info-box h4 {
-            color: #2e7d32;
-            margin-bottom: 10px;
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
         
-        .info-box p {
-            color: #1b5e20;
-            margin: 0;
-        }
-        
-        .tech-stack {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .tech-badge {
+        .comparison-table th {
             background: #8A0808;
             color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f5f5f5;
         }
         
         footer {
@@ -175,45 +221,135 @@
 <body>
     <div class="container">
         <h1>🅿️ SAE Parking App</h1>
-        <p class="subtitle">Application de gestion et de navigation vers les parkings</p>
+        <p class="subtitle">Application de gestion de parkings - Architecture MVC <span class="badge">NOUVEAU</span></p>
         
-        <div class="info-box">
-            <h4>✨ Projet Restructuré</h4>
-            <p>Ce projet a été réorganisé selon les bonnes pratiques de développement web. Consultez <strong>STRUCTURE.md</strong> et <strong>CHANGEMENTS.md</strong> pour plus de détails.</p>
+        <div class="info-box success">
+            <h4>✨ Architecture MVC Implémentée !</h4>
+            <p>Le projet suit maintenant l'architecture <strong>Modèle-Vue-Contrôleur</strong>, un standard professionnel qui sépare la logique métier, l'affichage et le contrôle de l'application.</p>
         </div>
         
         <div class="section">
-            <h2>🚀 Pages de l'Application</h2>
+            <h2>🚀 Versions de l'Application</h2>
+            
+            <h3 style="color: #4caf50; margin: 20px 0 15px 0;">Version MVC (Recommandée) ✨</h3>
+            <div class="card-grid">
+                <div class="card mvc">
+                    <h3>🗺️ Carte Interactive</h3>
+                    <p>Version MVC de la carte des parkings avec architecture séparée.</p>
+                    <a href="app_mvc.php" class="btn btn-mvc">Accéder (MVC)</a>
+                </div>
+                
+                <div class="card mvc">
+                    <h3>🔐 Connexion</h3>
+                    <p>Authentification avec contrôleur dédié et vues séparées.</p>
+                    <a href="login_mvc.php" class="btn btn-mvc">Se connecter (MVC)</a>
+                </div>
+                
+                <div class="card mvc">
+                    <h3>📝 Inscription</h3>
+                    <p>Création de compte avec architecture MVC propre.</p>
+                    <a href="register_mvc.php" class="btn btn-mvc">S'inscrire (MVC)</a>
+                </div>
+                
+                <div class="card mvc">
+                    <h3>⚙️ Paramètres</h3>
+                    <p>Gestion du profil, véhicules et favoris en architecture MVC.</p>
+                    <a href="user_settings_mvc.php" class="btn btn-mvc">Paramètres (MVC)</a>
+                </div>
+            </div>
+            
+            <h3 style="color: #666; margin: 20px 0 15px 0;">Version Classique (Conservée)</h3>
             <div class="card-grid">
                 <div class="card">
                     <h3>🗺️ Carte Interactive</h3>
-                    <p>Page principale avec la carte des parkings disponibles en temps réel.</p>
+                    <p>Version classique de la carte des parkings.</p>
                     <a href="app.php" class="btn">Accéder</a>
                 </div>
                 
                 <div class="card">
                     <h3>🔐 Connexion</h3>
-                    <p>Page de connexion pour accéder à votre compte personnel.</p>
+                    <p>Page de connexion version monolithique.</p>
                     <a href="login.php" class="btn">Se connecter</a>
                 </div>
                 
                 <div class="card">
                     <h3>📝 Inscription</h3>
-                    <p>Créer un nouveau compte pour profiter de toutes les fonctionnalités.</p>
+                    <p>Création de compte version classique.</p>
                     <a href="register.php" class="btn">S'inscrire</a>
                 </div>
                 
                 <div class="card">
                     <h3>⚙️ Paramètres</h3>
-                    <p>Gérer votre profil, vos véhicules et vos parkings favoris.</p>
+                    <p>Gestion du profil version monolithique.</p>
                     <a href="user_settings.php" class="btn">Paramètres</a>
                 </div>
             </div>
         </div>
         
         <div class="section">
-            <h2>📚 Documentation</h2>
+            <h2>📖 Qu'est-ce que MVC ?</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Composant</th>
+                        <th>Rôle</th>
+                        <th>Exemple</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Modèle</strong></td>
+                        <td>Gère les données et la logique métier</td>
+                        <td>User.php, Vehicle.php, Favorite.php</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vue</strong></td>
+                        <td>Affiche l'interface utilisateur (HTML)</td>
+                        <td>views/auth/login.php, views/parking/map.php</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contrôleur</strong></td>
+                        <td>Coordonne Modèle et Vue</td>
+                        <td>AuthController.php, UserController.php</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="info-box">
+                <h4>💡 Pourquoi MVC ?</h4>
+                <p><strong>MVC</strong> sépare clairement la logique métier, l'affichage et le contrôle, rendant le code plus maintenable, testable et évolutif.</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>✨ Avantages de l'Architecture MVC</h2>
+            <ul class="feature-list">
+                <li><strong>Séparation des responsabilités</strong> - Code organisé et clair</li>
+                <li><strong>Réutilisabilité</strong> - Modèles utilisables partout</li>
+                <li><strong>Maintenabilité</strong> - Modifications faciles et ciblées</li>
+                <li><strong>Testabilité</strong> - Tests unitaires possibles</li>
+                <li><strong>Collaboration</strong> - Travail en équipe facilité</li>
+                <li><strong>Évolutivité</strong> - Ajout de fonctionnalités simplifié</li>
+                <li><strong>Professionnalisme</strong> - Standard de l'industrie</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>📚 Documentation Complète</h2>
             <div class="card-grid">
+                <div class="card">
+                    <h3>🏗️ Architecture MVC</h3>
+                    <p>Guide complet de l'architecture Modèle-Vue-Contrôleur.</p>
+                    <a href="ARCHITECTURE_MVC.md" class="btn btn-secondary">Lire</a>
+                </div>
+                
+                <div class="card">
+                    <h3>🎉 Implémentation MVC</h3>
+                    <p>Résumé de l'implémentation et guide d'utilisation.</p>
+                    <a href="MVC_IMPLEMENTATION.md" class="btn btn-secondary">Lire</a>
+                </div>
+                
                 <div class="card">
                     <h3>📖 Structure du Projet</h3>
                     <p>Architecture complète et organisation des fichiers.</p>
@@ -221,52 +357,46 @@
                 </div>
                 
                 <div class="card">
-                    <h3>🔄 Changements Effectués</h3>
-                    <p>Résumé des modifications et améliorations apportées.</p>
+                    <h3>🔄 Changements</h3>
+                    <p>Résumé des modifications et améliorations.</p>
                     <a href="CHANGEMENTS.md" class="btn btn-secondary">Lire</a>
                 </div>
-                
-                <div class="card">
-                    <h3>🗄️ Base de Données</h3>
-                    <p>Script SQL de création de la base de données.</p>
-                    <a href="db.sql" class="btn btn-secondary">Télécharger</a>
-                </div>
             </div>
         </div>
         
         <div class="section">
-            <h2>✨ Fonctionnalités</h2>
-            <ul class="feature-list">
-                <li>Carte interactive avec Leaflet et OpenStreetMap</li>
-                <li>Localisation en temps réel de l'utilisateur</li>
-                <li>Affichage des parkings avec disponibilité en direct</li>
-                <li>Navigation GPS vers le parking le plus proche</li>
-                <li>Recherche de parkings par nom ou quartier</li>
-                <li>Système d'authentification sécurisé</li>
-                <li>Gestion de profil utilisateur (préférences PMR, coût)</li>
-                <li>Gestion de véhicules multiples</li>
-                <li>Sauvegarde de parkings favoris</li>
-                <li>Itinéraires calculés avec OSRM</li>
-            </ul>
-        </div>
-        
-        <div class="section">
-            <h2>🛠️ Technologies Utilisées</h2>
-            <div class="tech-stack">
-                <span class="tech-badge">PHP</span>
-                <span class="tech-badge">MySQL</span>
-                <span class="tech-badge">JavaScript</span>
-                <span class="tech-badge">HTML5</span>
-                <span class="tech-badge">CSS3</span>
-                <span class="tech-badge">Leaflet.js</span>
-                <span class="tech-badge">OpenStreetMap</span>
-                <span class="tech-badge">OSRM</span>
-                <span class="tech-badge">PDO</span>
-            </div>
+            <h2>🛠️ Structure des Dossiers</h2>
+            <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px; overflow-x: auto;">
+sae but 2 sem1/
+│
+├── <strong style="color: #4caf50;">models/</strong>           ✨ Modèles (données + logique métier)
+│   ├── Database.php
+│   ├── User.php
+│   ├── Vehicle.php
+│   └── Favorite.php
+│
+├── <strong style="color: #4caf50;">views/</strong>            ✨ Vues (interface utilisateur)
+│   ├── layouts/
+│   ├── auth/
+│   ├── user/
+│   └── parking/
+│
+├── <strong style="color: #4caf50;">controllers/</strong>      ✨ Contrôleurs (coordination)
+│   ├── AuthController.php
+│   ├── UserController.php
+│   └── ParkingController.php
+│
+├── assets/          (CSS + JavaScript)
+├── config/          (Configuration)
+└── includes/        (Ancien système)
+            </pre>
         </div>
         
         <footer>
-            <p><strong>SAE Parking App</strong> - Projet restructuré selon les bonnes pratiques de développement</p>
+            <p><strong>SAE Parking App</strong> - Architecture MVC Professionnelle</p>
+            <p style="margin-top: 10px; font-size: 14px;">
+                Implémentation MVC - 24 novembre 2025
+            </p>
         </footer>
     </div>
 </body>
