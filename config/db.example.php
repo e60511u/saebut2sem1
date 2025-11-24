@@ -1,9 +1,18 @@
 <?php
+/**
+ * EXEMPLE DE CONFIGURATION DE BASE DE DONNÉES
+ * 
+ * Copiez ce fichier vers config/db.php et modifiez les valeurs selon votre environnement
+ * 
+ * IMPORTANT : config/db.php ne doit JAMAIS être commité dans Git
+ * Il est ajouté au .gitignore pour protéger vos identifiants
+ */
+
 // Variables globales pour la connexion à la base de données
-$db_host = 'localhost';
-$db_dbname = 'e40250u_sae301';
-$db_username = 'user_a';
-$db_password = 'a';
+$db_host = 'localhost';           // Hôte de la base de données
+$db_dbname = 'e40250u_sae301';   // Nom de la base de données
+$db_username = 'user_a';          // Nom d'utilisateur
+$db_password = 'a';               // Mot de passe
 
 /**
  * Fonction pour se connecter à la base de données

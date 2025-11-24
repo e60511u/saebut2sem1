@@ -1,110 +1,87 @@
 <?php
 session_start();
-require_once 'db.php';
+require_once 'includes/auth.php';
+require_once 'includes/user.php';
 
 // Vérifier si l'utilisateur est connecté
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+requireLogin();
 
 $user_id = $_SESSION['user_id'];
-$pdo = connectDB();
-
-if ($pdo === null) {
-    die('Erreur de connexion à la base de données. Veuillez vérifier votre configuration.');
-}
+$success = '';
+$error = '';
 
 // Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        // Mise à jour des informations utilisateur
-        if (isset($_POST['update_user'])) {
-            $pseudo = $_POST['pseudo'] ?? '';
-            $email = $_POST['email'] ?? '';
-            $preference_cout = $_POST['preference_cout'] ?? 'INDIFFERENT';
-            $est_pmr = isset($_POST['est_pmr']) ? 1 : 0;
-            
-            $stmt = $pdo->prepare("UPDATE Utilisateur SET pseudo = ?, email = ?, preference_cout = ?, est_pmr = ? WHERE id_utilisateur = ?");
-            $stmt->execute([$pseudo, $email, $preference_cout, $est_pmr, $user_id]);
-            
-            $_SESSION['pseudo'] = $pseudo;
-            $_SESSION['email'] = $email;
-            $_SESSION['preference_cout'] = $preference_cout;
-            $_SESSION['est_pmr'] = $est_pmr;
+    // Mise à jour des informations utilisateur
+    if (isset($_POST['update_user'])) {
+        $pseudo = $_POST['pseudo'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $preference_cout = $_POST['preference_cout'] ?? 'INDIFFERENT';
+        $est_pmr = isset($_POST['est_pmr']) ? 1 : 0;
+        
+        if (updateUser($user_id, $pseudo, $email, $preference_cout, $est_pmr)) {
             $success = "Informations mises à jour avec succès";
+        } else {
+            $error = "Erreur lors de la mise à jour";
         }
+    }
+    
+    // Ajout d'un véhicule
+    if (isset($_POST['add_vehicle'])) {
+        $nom = $_POST['vehicle_name'] ?? '';
+        $type_id = $_POST['vehicle_type'] ?? 1;
+        $moto_id = $_POST['motorisation'] ?? 1;
         
-        // Ajout d'un véhicule
-        if (isset($_POST['add_vehicle'])) {
-            $nom = $_POST['vehicle_name'] ?? '';
-            $type_id = $_POST['vehicle_type'] ?? 1;
-            $moto_id = $_POST['motorisation'] ?? 1;
-            
-            $stmt = $pdo->prepare("INSERT INTO Vehicule (nom_vehicule, id_utilisateur, id_type_veh, id_motorisation) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$nom, $user_id, $type_id, $moto_id]);
+        if (addVehicle($user_id, $nom, $type_id, $moto_id)) {
             $success = "Véhicule ajouté avec succès";
+        } else {
+            $error = "Erreur lors de l'ajout du véhicule";
         }
-        
-        // Suppression d'un véhicule
-        if (isset($_POST['delete_vehicle'])) {
-            $vehicle_id = $_POST['vehicle_id'] ?? 0;
-            $stmt = $pdo->prepare("DELETE FROM Vehicule WHERE id_vehicule = ? AND id_utilisateur = ?");
-            $stmt->execute([$vehicle_id, $user_id]);
+    }
+    
+    // Suppression d'un véhicule
+    if (isset($_POST['delete_vehicle'])) {
+        $vehicle_id = $_POST['vehicle_id'] ?? 0;
+        if (deleteVehicle($user_id, $vehicle_id)) {
             $success = "Véhicule supprimé avec succès";
+        } else {
+            $error = "Erreur lors de la suppression du véhicule";
         }
+    }
+    
+    // Ajout d'un parking favori
+    if (isset($_POST['add_favorite'])) {
+        $parking_id = $_POST['parking_id'] ?? '';
+        $nom_perso = $_POST['custom_name'] ?? '';
         
-        // Ajout d'un parking favori
-        if (isset($_POST['add_favorite'])) {
-            $parking_id = $_POST['parking_id'] ?? '';
-            $nom_perso = $_POST['custom_name'] ?? '';
-            
-            $stmt = $pdo->prepare("INSERT INTO Favori (id_utilisateur, ref_parking_api, nom_custom) VALUES (?, ?, ?)");
-            $stmt->execute([$user_id, $parking_id, $nom_perso]);
+        if (addFavorite($user_id, $parking_id, $nom_perso)) {
             $success = "Parking favori ajouté avec succès";
+        } else {
+            $error = "Erreur lors de l'ajout du favori";
         }
-        
-        // Suppression d'un parking favori
-        if (isset($_POST['delete_favorite'])) {
-            $favorite_id = $_POST['favorite_id'] ?? 0;
-            $stmt = $pdo->prepare("DELETE FROM Favori WHERE id_favori = ? AND id_utilisateur = ?");
-            $stmt->execute([$favorite_id, $user_id]);
+    }
+    
+    // Suppression d'un parking favori
+    if (isset($_POST['delete_favorite'])) {
+        $favorite_id = $_POST['favorite_id'] ?? 0;
+        if (deleteFavorite($user_id, $favorite_id)) {
             $success = "Parking favori supprimé avec succès";
+        } else {
+            $error = "Erreur lors de la suppression du favori";
         }
-        
-    } catch (PDOException $e) {
-        $error = "Erreur: " . $e->getMessage();
     }
 }
 
-// Récupération des données utilisateur
-$stmt = $pdo->prepare("SELECT * FROM Utilisateur WHERE id_utilisateur = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch();
-
+// Récupération des données
+$user = getUserById($user_id);
 if (!$user) {
     $user = ['id_utilisateur' => $user_id, 'pseudo' => 'Utilisateur', 'email' => 'user@example.com', 'preference_cout' => 'INDIFFERENT', 'est_pmr' => 0];
 }
 
-// Récupération des types de véhicules et motorisations
-$types_veh = $pdo->query("SELECT * FROM Ref_Type_Vehicule ORDER BY libelle_type")->fetchAll();
-$motorisations = $pdo->query("SELECT * FROM Ref_Motorisation ORDER BY libelle_moto")->fetchAll();
-
-// Récupération des véhicules avec leurs infos
-$stmt = $pdo->prepare("
-    SELECT v.*, t.libelle_type, m.libelle_moto 
-    FROM Vehicule v
-    JOIN Ref_Type_Vehicule t ON v.id_type_veh = t.id_type_veh
-    JOIN Ref_Motorisation m ON v.id_motorisation = m.id_motorisation
-    WHERE v.id_utilisateur = ?
-");
-$stmt->execute([$user_id]);
-$vehicles = $stmt->fetchAll();
-
-// Récupération des parkings favoris
-$stmt = $pdo->prepare("SELECT * FROM Favori WHERE id_utilisateur = ?");
-$stmt->execute([$user_id]);
-$favorites = $stmt->fetchAll();
+$types_veh = getVehicleTypes();
+$motorisations = getMotorisations();
+$vehicles = getUserVehicles($user_id);
+$favorites = getUserFavorites($user_id);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -112,156 +89,13 @@ $favorites = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paramètres utilisateur</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        h1 {
-            color: #8A0808;
-            margin-bottom: 30px;
-            font-size: 28px;
-        }
-        
-        h2 {
-            color: #333;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-size: 20px;
-            border-bottom: 2px solid #8A0808;
-            padding-bottom: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        button {
-            background: #8A0808;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: background 0.3s ease;
-        }
-        
-        button:hover {
-            background: #B71C1C;
-        }
-        
-        button.delete {
-            background: #666;
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-        
-        button.delete:hover {
-            background: #888;
-        }
-        
-        .item-list {
-            background: #f9f9f9;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .item {
-            background: white;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .item-info {
-            flex: 1;
-        }
-        
-        .item-info strong {
-            color: #8A0808;
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .item-info span {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #8A0808;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .back-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/user_settings.css">
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="header-nav">
             <a href="app.php" class="back-link">← Retour à la carte</a>
-            <a href="logout.php" class="back-link" style="color: #666;">Déconnexion</a>
+            <a href="logout.php" class="back-link logout-link">Déconnexion</a>
         </div>
         
         <h1>Paramètres utilisateur</h1>

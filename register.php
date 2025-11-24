@@ -1,15 +1,14 @@
 <?php
 session_start();
-require_once 'db.php';
+require_once 'includes/auth.php';
 
 // Rediriger si déjà connecté
-if (isset($_SESSION['user_id'])) {
+if (isLoggedIn()) {
     header('Location: app.php');
     exit;
 }
 
 $error = '';
-$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pseudo = trim($_POST['pseudo'] ?? '');
@@ -27,39 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Email invalide';
     } else {
-        $pdo = connectDB();
+        $result = registerUser($pseudo, $email, $password);
         
-        if ($pdo === null) {
-            $error = 'Erreur de connexion à la base de données';
+        if (is_array($result)) {
+            // Succès - connecter l'utilisateur
+            initUserSession($result);
+            header('Location: app.php');
+            exit;
         } else {
-            // Vérifier si l'email ou le pseudo existe déjà
-            $stmt = $pdo->prepare("SELECT id_utilisateur FROM Utilisateur WHERE email = ? OR pseudo = ?");
-            $stmt->execute([$email, $pseudo]);
-        
-        if ($stmt->fetch()) {
-            $error = 'Cet email ou pseudo est déjà utilisé';
-        } else {
-            // Créer le compte
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            
-            try {
-                $stmt = $pdo->prepare("INSERT INTO Utilisateur (email, pseudo, mot_de_passe, est_pmr, preference_cout) VALUES (?, ?, ?, 0, 'INDIFFERENT')");
-                $stmt->execute([$email, $pseudo, $hashed_password]);
-                
-                // Connexion automatique
-                $user_id = $pdo->lastInsertId();
-                $_SESSION['user_id'] = $user_id;
-                $_SESSION['pseudo'] = $pseudo;
-                $_SESSION['email'] = $email;
-                $_SESSION['preference_cout'] = 'INDIFFERENT';
-                $_SESSION['est_pmr'] = 0;
-                
-                header('Location: app.php');
-                exit;
-            } catch (PDOException $e) {
-                $error = 'Erreur lors de la création du compte';
-            }
-        }
+            // Erreur - $result contient le message d'erreur
+            $error = $result;
         }
     }
 }
@@ -70,122 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - Parking App</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #8A0808 0%, #B71C1C 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .register-container {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        h1 {
-            color: #8A0808;
-            margin-bottom: 10px;
-            font-size: 28px;
-            text-align: center;
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #8A0808;
-        }
-        
-        button {
-            width: 100%;
-            background: #8A0808;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: background 0.3s ease;
-        }
-        
-        button:hover {
-            background: #B71C1C;
-        }
-        
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .login-link a {
-            color: #8A0808;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-        
-        .password-hint {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/register.css">
 </head>
 <body>
     <div class="register-container">

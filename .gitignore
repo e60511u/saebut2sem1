@@ -1,0 +1,31 @@
+# Configuration sensible
+config/db.php
+.env
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Éditeurs / IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Logs
+*.log
+error_log
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Dépendances (si utilisation de Composer)
+vendor/
+composer.lock
+
+# Cache
+cache/
+tmp/

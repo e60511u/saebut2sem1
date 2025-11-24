@@ -11,7 +11,7 @@ session_start();
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="assets/css/style.css"/>
 </head>
 <body>
   <div id ="search-bar">
@@ -41,6 +41,6 @@ session_start();
     </a>
   <?php endif; ?>
 
-  <script src="script.js"></script>
+  <script src="assets/js/script.js"></script>
 </body>
 </html>
