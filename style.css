@@ -279,7 +279,143 @@ html, body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* Version mobile */
+/* Optimisations pour mobile - Détection tactile et petit écran */
+@media (max-width: 767px) and (pointer: coarse) and (hover: none) {
+  #site-search {
+    padding: 4% 5%;
+    font-size: 1.2rem;
+  }
+  
+  #search-bar button:not(#stop-guidance) {
+    padding: 4%;
+    font-size: 1.2rem;
+  }
+  
+  .suggestion-item {
+    padding: 3.5% 5%;
+    font-size: 1.1rem;
+  }
+  
+  .suggestion-item .parking-info {
+    font-size: 0.95rem;
+  }
+  
+  .switch-text {
+    font-size: 1.1rem;
+  }
+  
+  .switch-slider {
+    width: 3.75rem;
+    height: 2rem;
+  }
+  
+  .switch-slider::before {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .switch-label input[type="checkbox"]:checked + .switch-slider::before {
+    transform: translateX(1.75rem);
+  }
+  
+  #nearest-parking {
+    padding: 4% 8%;
+    font-size: 1.2rem;
+    bottom: 5%;
+  }
+  
+  #stop-guidance {
+    padding: 4% 8%;
+    font-size: 1.2rem;
+    bottom: 5%;
+  }
+  
+  #user-button {
+    width: 4rem;
+    height: 4rem;
+    font-size: 2rem;
+    bottom: 5%;
+    right: 5%;
+  }
+  
+  #search-bar {
+    padding: 5%;
+  }
+  
+  #follow-switch-container {
+    padding: 4% 5%;
+  }
+}
+
+/* Fallback pour petits écrans sans détection tactile */
+@media (max-width: 767px) and (pointer: none) {
+  #site-search {
+    padding: 4% 5%;
+    font-size: 1.2rem;
+  }
+  
+  #search-bar button:not(#stop-guidance) {
+    padding: 4%;
+    font-size: 1.2rem;
+  }
+  
+  .suggestion-item {
+    padding: 3.5% 5%;
+    font-size: 1.1rem;
+  }
+  
+  .suggestion-item .parking-info {
+    font-size: 0.95rem;
+  }
+  
+  .switch-text {
+    font-size: 1.1rem;
+  }
+  
+  .switch-slider {
+    width: 3.75rem;
+    height: 2rem;
+  }
+  
+  .switch-slider::before {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .switch-label input[type="checkbox"]:checked + .switch-slider::before {
+    transform: translateX(1.75rem);
+  }
+  
+  #nearest-parking {
+    padding: 4% 8%;
+    font-size: 1.2rem;
+    bottom: 5%;
+  }
+  
+  #stop-guidance {
+    padding: 4% 8%;
+    font-size: 1.2rem;
+    bottom: 5%;
+  }
+  
+  #user-button {
+    width: 4rem;
+    height: 4rem;
+    font-size: 2rem;
+    bottom: 5%;
+    right: 5%;
+  }
+  
+  #search-bar {
+    padding: 5%;
+  }
+  
+  #follow-switch-container {
+    padding: 4% 5%;
+  }
+}
+
+/* Version tablette/desktop */
 @media (min-width: 768px) {
   #search-bar {
     flex-direction: row;

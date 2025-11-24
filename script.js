@@ -110,22 +110,22 @@ function mettreAJourPositionUtilisateur() {
     }
     
     // Recalculer l'itinéraire si en guidage
-    if (estEnGuidage && marqueurDestination && destinationFinale !== null && parkingIntermediaire !== null) {
-      if (destinationFinale && parkingIntermediaire) {
+    if (estEnGuidage && marqueurDestination) {
+      if (destinationFinale !== null && parkingIntermediaire !== null) {
         // Guidage avec parking intermédiaire - ne recalculer que l'itinéraire principal
         calculerItineraire(positionUtilisateur, [parkingIntermediaire.lat, parkingIntermediaire.lng]);
         // L'itinéraire secondaire reste fixe et n'est pas recalculé
+      } else {
+        // Guidage direct vers un parking
+        const destLatLng = marqueurDestination.getLatLng();
+        calculerItineraire(positionUtilisateur, [destLatLng.lat, destLatLng.lng]);
       }
-    } else if (estEnGuidage && marqueurDestination) {
-      // Guidage direct vers un parking
-      const destLatLng = marqueurDestination.getLatLng();
-      calculerItineraire(positionUtilisateur, [destLatLng.lat, destLatLng.lng]);
     }
   });
 }
 
 mettreAJourPositionUtilisateur();
-setInterval(mettreAJourPositionUtilisateur, 5000);
+setInterval(mettreAJourPositionUtilisateur, 2000);
 
 // Calculer l'itinéraire
 // Fonction async car elle effectue un appel réseau (fetch) vers l'API OSRM et doit attendre la réponse avant de pouvoir tracer l'itinéraire sur la carte
@@ -170,6 +170,11 @@ async function chargerParkings() {
     
     marqueursParkings.forEach(marqueur => carte.removeLayer(marqueur));
     marqueursParkings = [];
+    
+    // Ne pas afficher les parkings si on est en guidage
+    if (estEnGuidage) {
+      return;
+    }
     
     // Afficher les parkings avec disponibilité
     donnees1.features.forEach(feature => {
@@ -287,7 +292,7 @@ function getFavoriteCustomName(parkingId) {
 }
 
 chargerParkings();
-setInterval(chargerParkings, 30000);
+setInterval(chargerParkings, 60000);
 
 // Démarrer le guidage vers un parking
 window.demarrerGuidage = function(lat, lng) {
@@ -325,23 +330,37 @@ window.demarrerGuidage = function(lat, lng) {
 
 // Stopper le guidage
 document.getElementById('stop-guidance').addEventListener('click', function() {
+  // D'abord désactiver le guidage pour éviter les recalculs
   estEnGuidage = false;
   destinationFinale = null;
   parkingIntermediaire = null;
   
-  // Supprimer l'itinéraire
+  // Supprimer toutes les couches d'itinéraire avec vérification
   if (coucheItineraire) {
-    carte.removeLayer(coucheItineraire);
+    try {
+      carte.removeLayer(coucheItineraire);
+    } catch (e) {
+      console.log('Erreur lors de la suppression de coucheItineraire:', e);
+    }
     coucheItineraire = null;
   }
+  
   if (coucheItineraireSecondaire) {
-    carte.removeLayer(coucheItineraireSecondaire);
+    try {
+      carte.removeLayer(coucheItineraireSecondaire);
+    } catch (e) {
+      console.log('Erreur lors de la suppression de coucheItineraireSecondaire:', e);
+    }
     coucheItineraireSecondaire = null;
   }
   
   // Supprimer le marqueur de destination
   if (marqueurDestination) {
-    carte.removeLayer(marqueurDestination);
+    try {
+      carte.removeLayer(marqueurDestination);
+    } catch (e) {
+      console.log('Erreur lors de la suppression du marqueurDestination:', e);
+    }
     marqueurDestination = null;
   }
   
