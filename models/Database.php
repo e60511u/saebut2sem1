@@ -8,11 +8,22 @@ class Database {
     private $pdo;
     
     private function __construct() {
-        require_once __DIR__ . '/../config/db.php';
+        $config_path = __DIR__ . '/../config/db.php';
+        
+        if (!file_exists($config_path)) {
+            throw new Exception("Fichier de configuration introuvable : " . $config_path);
+        }
+        
+        require_once $config_path;
+        
+        if (!function_exists('connectDB')) {
+            throw new Exception("La fonction connectDB() n'est pas définie dans config/db.php");
+        }
+        
         $this->pdo = connectDB();
         
         if ($this->pdo === null) {
-            throw new Exception("Échec de la connexion à la base de données. Vérifiez vos identifiants dans config/db.php");
+            throw new Exception("Échec de la connexion à la base de données. Vérifiez vos identifiants dans config/db.php et les logs d'erreur PHP.");
         }
     }
     

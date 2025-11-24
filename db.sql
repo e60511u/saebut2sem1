@@ -21,18 +21,21 @@ SET time_zone = "+00:00";
 -- Base de données : `e40250u_sae301`
 --
 
+CREATE DATABASE IF NOT EXISTS `e40250u_sae301` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `e40250u_sae301`;
+
 -- --------------------------------------------------------
 
 --
 -- Structure de la table `Favori`
 --
 
-CREATE TABLE `Favori` (
+CREATE TABLE IF NOT EXISTS `Favori` (
   `id_favori` int(11) NOT NULL,
   `id_utilisateur` int(11) NOT NULL,
   `ref_parking_api` varchar(50) NOT NULL COMMENT 'Identifiant JSON (ex: pub_tsp_sta.159)',
   `nom_custom` varchar(100) DEFAULT NULL COMMENT 'Surnom donné par l utilisateur'
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `Favori`
@@ -49,12 +52,12 @@ INSERT INTO `Favori` (`id_favori`, `id_utilisateur`, `ref_parking_api`, `nom_cus
 -- Structure de la table `Historique`
 --
 
-CREATE TABLE `Historique` (
+CREATE TABLE IF NOT EXISTS `Historique` (
   `id_historique` int(11) NOT NULL,
   `id_utilisateur` int(11) NOT NULL,
   `ref_parking_api` varchar(50) NOT NULL,
   `date_recherche` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `Historique`
@@ -70,10 +73,10 @@ INSERT INTO `Historique` (`id_historique`, `id_utilisateur`, `ref_parking_api`, 
 -- Structure de la table `Ref_Motorisation`
 --
 
-CREATE TABLE `Ref_Motorisation` (
+CREATE TABLE IF NOT EXISTS `Ref_Motorisation` (
   `id_motorisation` int(11) NOT NULL,
   `libelle_moto` varchar(30) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `Ref_Motorisation`
@@ -91,10 +94,10 @@ INSERT INTO `Ref_Motorisation` (`id_motorisation`, `libelle_moto`) VALUES
 -- Structure de la table `Ref_Type_Vehicule`
 --
 
-CREATE TABLE `Ref_Type_Vehicule` (
+CREATE TABLE IF NOT EXISTS `Ref_Type_Vehicule` (
   `id_type_veh` int(11) NOT NULL,
   `libelle_type` varchar(30) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `Ref_Type_Vehicule`
@@ -111,14 +114,14 @@ INSERT INTO `Ref_Type_Vehicule` (`id_type_veh`, `libelle_type`) VALUES
 -- Structure de la table `Utilisateur`
 --
 
-CREATE TABLE `Utilisateur` (
+CREATE TABLE IF NOT EXISTS `Utilisateur` (
   `id_utilisateur` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
   `mot_de_passe` varchar(255) NOT NULL,
   `pseudo` varchar(50) NOT NULL,
   `est_pmr` tinyint(1) DEFAULT 0 COMMENT '0: Non, 1: Oui (Carte Mobilité Inclusion)',
   `preference_cout` enum('GRATUIT','PAYANT','INDIFFERENT') DEFAULT 'INDIFFERENT'
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `Utilisateur`
@@ -135,13 +138,13 @@ INSERT INTO `Utilisateur` (`id_utilisateur`, `email`, `mot_de_passe`, `pseudo`, 
 -- Structure de la table `Vehicule`
 --
 
-CREATE TABLE `Vehicule` (
+CREATE TABLE IF NOT EXISTS `Vehicule` (
   `id_vehicule` int(11) NOT NULL,
   `nom_vehicule` varchar(50) DEFAULT NULL,
   `id_utilisateur` int(11) NOT NULL,
   `id_type_veh` int(11) NOT NULL,
   `id_motorisation` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `Vehicule`
