@@ -1,0 +1,76 @@
+═══════════════════════════════════════════════════════════════
+  CHECKLIST DE DÉPLOIEMENT - Application Parking Metz
+═══════════════════════════════════════════════════════════════
+
+📦 CE QUE VOUS UPLOADEZ SUR LE SERVEUR
+═══════════════════════════════════════════════════════════════
+
+✅ UNIQUEMENT le dossier Appli/ et TOUT son contenu
+
+   Structure à uploader :
+   Appli/
+   ├── api/
+   ├── assets/
+   ├── config/
+   ├── includes/
+   ├── index.php
+   └── ... (tous les autres fichiers)
+
+❌ À NE PAS UPLOADER
+═══════════════════════════════════════════════════════════════
+
+❌ Le dossier bdd/ (le fichier SQL doit être importé via phpMyAdmin)
+❌ Le dossier saebut2sem1-MVP/ (ancien MVP)
+❌ Le fichier Appli.zip (c'est juste une archive)
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPES DE DÉPLOIEMENT
+═══════════════════════════════════════════════════════════════
+
+[ ] 1. Uploader le dossier Appli/ sur le serveur IUT
+[ ] 2. Modifier config/db.php avec vos identifiants IUT
+[ ] 3. Importer bdd/e40250u_sae301.sql via phpMyAdmin
+[ ] 4. Tester : http://votre_url/test_simple.php
+[ ] 5. Tester : http://votre_url/index.php
+
+═══════════════════════════════════════════════════════════════
+  CONFIGURATION config/db.php
+═══════════════════════════════════════════════════════════════
+
+Lignes à modifier (49-52) :
+  $host = 'devbdd.iutmetz.univ-lorraine.fr';
+  $dbname = 'e40250u_sae301';
+  $username = 'VOTRE_IDENTIFIANT_IUT';  ← À remplacer
+  $password = 'VOTRE_MOT_DE_PASSE_IUT'; ← À remplacer
+
+═══════════════════════════════════════════════════════════════
+  IMPORT BASE DE DONNÉES
+═══════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANT : Le fichier SQL ne s'upload pas !
+
+1. Connectez-vous à phpMyAdmin sur le serveur IUT
+2. Sélectionnez la base e40250u_sae301
+3. Onglet "Importer"
+4. Choisissez bdd/e40250u_sae301.sql depuis votre PC
+5. Cliquez "Exécuter"
+
+═══════════════════════════════════════════════════════════════
+  URL D'ACCÈS
+═══════════════════════════════════════════════════════════════
+
+http://devbdd.iutmetz.univ-lorraine.fr/votre_dossier/
+
+Exemple : http://devbdd.iutmetz.univ-lorraine.fr/parking-metz/
+
+═══════════════════════════════════════════════════════════════
+  TESTS À EFFECTUER
+═══════════════════════════════════════════════════════════════
+
+✓ Test config : http://votre_url/test_simple.php
+✓ Test API : http://votre_url/api/getParkings.php
+✓ Application : http://votre_url/index.php
+
+═══════════════════════════════════════════════════════════════
+
+✅ RÉSUMÉ : Vous n'avez besoin QUE du dossier Appli/ !

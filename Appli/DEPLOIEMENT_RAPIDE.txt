@@ -1,0 +1,89 @@
+═══════════════════════════════════════════════════════════════
+  GUIDE RAPIDE DE DÉPLOIEMENT - Application Parking Metz
+═══════════════════════════════════════════════════════════════
+
+📌 SUR LE SERVEUR IUT
+═══════════════════════════════════════════════════════════════
+
+1. UPLOADER LES FICHIERS
+   ──────────────────────
+   • Connectez-vous au serveur IUT via FTP/SFTP
+   • Créez un dossier (ex: "parking-metz")
+   • Uploadez TOUT le contenu du dossier Appli/ dans ce dossier
+
+2. CONFIGURER LA BASE DE DONNÉES
+   ───────────────────────────────
+   • Ouvrez config/db.php sur le serveur
+   • Modifiez les lignes 49-52 :
+     $host = 'devbdd.iutmetz.univ-lorraine.fr';
+     $dbname = 'e40250u_sae301';
+     $username = 'VOTRE_IDENTIFIANT_IUT';  ← À remplacer
+     $password = 'VOTRE_MOT_DE_PASSE_IUT'; ← À remplacer
+
+3. ACCÉDER À L'APPLICATION
+   ────────────────────────
+   URL : http://devbdd.iutmetz.univ-lorraine.fr/votre_dossier/
+   
+   Exemple si votre dossier s'appelle "parking-metz" :
+   http://devbdd.iutmetz.univ-lorraine.fr/parking-metz/
+
+4. TESTER
+   ───────
+   • Test config : http://votre_url/test_config.php
+   • Test API : http://votre_url/api/getParkings.php
+   • Application : http://votre_url/index.php
+
+
+💻 EN LOCAL (XAMPP)
+═══════════════════════════════════════════════════════════════
+
+1. INSTALLER XAMPP
+   ────────────────
+   • Téléchargez : https://www.apachefriends.org/
+   • Installez dans C:\xampp\
+   • Démarrez Apache depuis le panneau XAMPP
+
+2. COPIER LES FICHIERS
+   ────────────────────
+   • Copiez le dossier Appli dans : C:\xampp\htdocs\Appli
+
+3. CONFIGURER LA BASE DE DONNÉES
+   ───────────────────────────────
+   • Ouvrez phpMyAdmin : http://localhost/phpmyadmin
+   • Créez une base "e40250u_sae301"
+   • Importez le fichier : bdd/e40250u_sae301.sql
+   
+   • Modifiez config/db.php :
+     $host = 'localhost';
+     $dbname = 'e40250u_sae301';
+     $username = 'root';
+     $password = '';
+
+4. ACCÉDER À L'APPLICATION
+   ────────────────────────
+   URL : http://localhost/Appli/
+
+
+🔍 VÉRIFICATIONS IMPORTANTES
+═══════════════════════════════════════════════════════════════
+
+✓ Tous les fichiers sont uploadés
+✓ config/db.php est configuré avec les bons identifiants
+✓ La base de données est créée et importée
+✓ Le serveur web (Apache) est démarré
+✓ PHP est installé (version 7.4+)
+
+
+❌ PROBLÈMES COURANTS
+═══════════════════════════════════════════════════════════════
+
+• Erreur 404 → Vérifiez l'URL et que les fichiers sont uploadés
+• Erreur BDD → Vérifiez config/db.php et que MySQL est démarré
+• Carte vide → Ouvrez la console (F12) et vérifiez les erreurs JS
+• Pas de parkings → Testez api/getParkings.php directement
+
+
+📞 AIDE
+═══════════════════════════════════════════════════════════════
+
+Consultez GUIDE_DEPLOIEMENT.md pour plus de détails !
